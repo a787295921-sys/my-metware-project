@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>信息变更与订单确认流程图</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1e293b;
+      padding: 32px 24px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 36px;
+    }
+    .section {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 36px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .section-number {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .c1 { background: #3b82f6; }
+    .c2 { background: #10b981; }
+    .c3 { background: #f59e0b; }
+    .c4 { background: #8b5cf6; }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .section-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-left: auto;
+    }
+    .diagram-wrap {
+      padding: 24px;
+      overflow-x: auto;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>信息变更与订单确认流程图</h1>
+<p class="subtitle">共 4 个业务流程 · 基于业务说明文档整理</p>
+
+<!-- 流程一：合同/订单确认 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number c1">1</div>
+    <div class="section-title">销售合同 / 订单确认流程</div>
+    <div class="section-desc">销售 → CRM → 云平台 / 小程序 → 联系人确认</div>
+  </div>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A(["📋 销售/内勤在 CRM 创建合同\n并完成审核"]) --> B["推送至云平台 & 小程序"]
+    B --> C{"客户实名状态?"}
+
+    C -- "未实名（标记0）" --> D["引导客户先完成实名认证"]
+    D --> C
+
+    C -- "手机号验证用户" --> E["引导客户完成手机号短信验证"]
+    E --> C
+
+    C -- "已实名 / 已验证 / 渠道客户" --> F{"联系人操作"}
+
+    F -- "✅ 确认" --> G["合同/订单完成\nCRM 状态：已电签"]
+    G --> H(["📎 生成电签附件\n计入合同返回"])
+
+    F -- "❌ 拒绝" --> I["CRM 流程返回\n至销售申请界面"]
+    I --> J["销售修改内容\n重新提交审核"]
+    J --> B
+
+    style A fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    style G fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style H fill:#d1fae5,stroke:#10b981,color:#064e3b
+    style I fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
+    style D fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    style E fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    </div>
+  </div>
+</div>
+
+<!-- 流程二：合同变更 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number c2">2</div>
+    <div class="section-title">合同变更确认流程</div>
+    <div class="section-desc">已启动合同的变更处理</div>
+  </div>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A(["📝 发起合同变更"]) --> B{"变更类型?"}
+
+    B -- "非联系人信息变更\n（如金额、周期等）" --> C["推送变更内容\n至云平台/小程序"]
+    C --> D["客户确认变更"]
+    D --> E(["✅ CRM 变更完成"])
+
+    B -- "联系人信息变更" --> F["推送至原联系人 & 新联系人"]
+    F --> G{"原联系人确认?"}
+    G -- "确认" --> H{"新联系人确认?"}
+    G -- "未确认" --> G
+    H -- "确认" --> E
+    H -- "待确认（待定）" --> H
+
+    style A fill:#d1fae5,stroke:#10b981,color:#064e3b
+    style E fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style F fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    </div>
+  </div>
+</div>
+
+<!-- 流程三：客户发起个人信息变更 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number c3">3</div>
+    <div class="section-title">客户发起个人信息变更流程</div>
+    <div class="section-desc">客户通过云平台 / 小程序主动变更个人信息</div>
+  </div>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A(["👤 客户在云平台/小程序\n发起个人信息变更"]) --> B{"当前实名状态?"}
+
+    B -- "未实名" --> C["允许编辑个人信息"]
+    C --> D["完成实名认证后\n推送至 CRM"]
+
+    B -- "已实名" --> E{"变更内容?"}
+
+    E -- "姓名 / 身份证号" --> F(["🚫 不允许变更\nCRM 已限制"])
+
+    E -- "手机号变更" --> G["发送手机号\nSMS 短信验证"]
+    G --> H{"验证结果?"}
+    H -- "验证通过" --> I["推送变更至 CRM"]
+    H -- "验证失败" --> G
+
+    E -- "所属单位变更/新增" --> J["客户重新上传\n相关资料"]
+    J --> K["CRM 发起单位审核"]
+    K --> L{"审核结果?"}
+    L -- "审核通过" --> M["返回审核通过结果\n信息更新生效"]
+    L -- "审核拒绝" --> N["返回拒绝结果\n至云平台通知客户"]
+
+    style A fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style F fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
+    style I fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style M fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style N fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
+    </div>
+  </div>
+</div>
+
+<!-- 流程四：CRM 发起变更 + 合同联系人邮箱不一致 -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number c4">4</div>
+    <div class="section-title">CRM 发起变更 & 甲方联系人邮箱处理</div>
+    <div class="section-desc">CRM 侧主动推送变更 + 合同邮箱与联系人不一致的特殊处理</div>
+  </div>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A(["🖥️ CRM 发起信息变更\n（姓名不可修改）"]) --> B["推送待办通知\n至云平台/小程序"]
+    B --> C["客户在云平台/小程序\n查看并确认变更"]
+    C --> D(["✅ 变更完成"])
+
+    A2(["📄 创建合同：甲方联系人邮箱\n与联系人账号邮箱不一致"]) --> B2["推送合同至\n联系人 ID 账号（实名后确认）"]
+    B2 --> C2["联系人账号负责\n后续个人信息变更 & 合同变更确认"]
+    C2 --> D2["合同审核流程完成"]
+    D2 --> E2["系统创建【甲方联系人邮箱】账号"]
+    E2 --> F2(["📧 后续项目信息 & 数据\n推送至该邮箱账号"])
+
+    style A fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    style D fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style A2 fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    style F2 fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    </div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: '"PingFang SC", "Microsoft YaHei", Arial, sans-serif',
+      fontSize: '13px',
+      primaryColor: '#eff6ff',
+      primaryTextColor: '#1e293b',
+      primaryBorderColor: '#93c5fd',
+      lineColor: '#64748b',
+      secondaryColor: '#f0fdf4',
+      tertiaryColor: '#fefce8',
+      edgeLabelBackground: '#f8fafc',
+      clusterBkg: '#f1f5f9',
+    },
+    flowchart: {
+      curve: 'basis',
+      padding: 20,
+      nodeSpacing: 50,
+      rankSpacing: 60,
+    }
+  });
+</script>
+</body>
+</html>
