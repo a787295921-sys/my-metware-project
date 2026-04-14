@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的合同 - 迈维云平台</title>
+<link rel="icon" href="https://cloud.metware.cn/index.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.6/dist/reset.min.css">
+<style>
+/* ========== Reset & Base ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  background: #f0f2f5;
+  overflow: hidden;
+  height: 100vh;
+}
+a { color: #004098; text-decoration: none; }
+a:hover { color: #00337a; }
+
+/* ========== Top Navigation Bar ========== */
+.top-nav {
+  height: 50px;
+  background: #004098;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.top-nav-logo {
+  display: flex;
+  align-items: center;
+  margin-right: 40px;
+  flex-shrink: 0;
+}
+.top-nav-logo img { height: 28px; margin-right: 8px; }
+.top-nav-logo span {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.top-nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex: 1;
+}
+.top-nav-item {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  color: rgba(255,255,255,0.85);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  position: relative;
+}
+.top-nav-item:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.top-nav-item.active { color: #FF91DC; background: transparent; }
+.top-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: #FF91DC;
+  border-radius: 1px;
+}
+.top-nav-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.top-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.top-nav-user:hover { background: rgba(255,255,255,0.1); }
+.top-nav-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+}
+.top-nav-username { font-size: 13px; }
+.top-nav-caret { font-size: 10px; opacity: 0.7; }
+
+/* ========== Layout ========== */
+.layout {
+  display: flex;
+  height: 100vh;
+  padding-top: 50px;
+}
+
+/* ========== Sidebar ========== */
+.sidebar {
+  width: 180px;
+  min-width: 180px;
+  height: calc(100vh - 50px);
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid #e8e8e8;
+  z-index: 10;
+  padding-top: 8px;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 2px; }
+
+.menu-section { padding: 0; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 42px;
+  color: rgba(0,0,0,0.65);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  user-select: none;
+  position: relative;
+}
+.menu-item:hover { color: #004098; background: #e6f7ff; }
+.menu-item.active {
+  color: #004098;
+  background: #e6f7ff;
+  font-weight: 500;
+}
+.menu-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #004098;
+}
+.menu-item .menu-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.menu-item .menu-icon svg { width: 16px; height: 16px; fill: currentColor; }
+.menu-item .menu-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.menu-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 8px 16px;
+}
+
+/* ========== Main Content ========== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  background: #f0f2f5;
+}
+
+/* ========== Page Content ========== */
+.page-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.page-header { margin-bottom: 16px; }
+.page-header h2 {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.85);
+}
+
+/* ========== Card ========== */
+.card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02);
+}
+
+/* ========== Tab Filter ========== */
+.tab-filter-bar {
+  padding: 12px 24px 0;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.tab-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  user-select: none;
+}
+.tab-item:hover { color: #004098; }
+.tab-item.active {
+  color: #004098;
+  font-weight: 500;
+  border-bottom-color: #004098;
+}
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 12px;
+  background: #f0f0f0;
+  border-radius: 9px;
+  color: rgba(0,0,0,0.45);
+  margin-left: 4px;
+}
+.tab-item.active .tab-count {
+  background: #e6f7ff;
+  color: #004098;
+}
+.tab-count-red {
+  background: #fff1f0 !important;
+  color: #ff4d4f !important;
+}
+.tab-item.active .tab-count-red {
+  background: #ffccc7 !important;
+  color: #cf1322 !important;
+}
+
+/* ========== Search/Filter Bar ========== */
+.filter-bar {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.filter-item { display: flex; align-items: center; gap: 8px; }
+.filter-item label { font-size: 14px; color: rgba(0,0,0,0.65); white-space: nowrap; }
+
+/* ========== Form Controls ========== */
+.ant-input {
+  height: 32px;
+  padding: 4px 11px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+.ant-input:hover { border-color: #40a9ff; }
+.ant-input:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+.ant-input::placeholder { color: rgba(0,0,0,0.25); }
+
+.ant-select {
+  height: 32px;
+  padding: 0 30px 0 11px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  font-family: inherit;
+}
+.ant-select:hover { border-color: #40a9ff; }
+.ant-select:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+
+.ant-date-input {
+  height: 32px;
+  padding: 4px 11px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+.ant-date-input:hover { border-color: #40a9ff; }
+.ant-date-input:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+
+/* ========== Buttons ========== */
+.ant-btn {
+  height: 32px;
+  padding: 0 15px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  color: rgba(0,0,0,0.65);
+  white-space: nowrap;
+  user-select: none;
+}
+.ant-btn:hover { color: #004098; border-color: #004098; }
+.ant-btn-primary { background: #004098; color: #fff; border-color: #004098; }
+.ant-btn-primary:hover { background: #00337a; border-color: #00337a; color: #fff; }
+.ant-btn-primary:active { background: #00265c; border-color: #00265c; }
+.ant-btn[disabled], .ant-btn-primary[disabled], .ant-btn-danger[disabled] {
+  opacity: 0.5; cursor: not-allowed; pointer-events: none;
+}
+.ant-btn-danger { color: #ff4d4f; border-color: #ff4d4f; }
+.ant-btn-danger:hover { color: #ff7875; border-color: #ff7875; }
+.ant-btn-link { border: none; background: none; color: #004098; padding: 0; height: auto; box-shadow: none; }
+.ant-btn-link:hover { color: #00337a; border: none; }
+.ant-btn-link.danger-link { color: #ff4d4f; }
+.ant-btn-link.danger-link:hover { color: #ff7875; }
+
+.btn-sm { height: 28px; padding: 0 10px; font-size: 13px; }
+
+/* ========== Table ========== */
+.table-wrapper { overflow-x: auto; }
+.ant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.ant-table thead th {
+  background: #fafafa;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 500;
+  color: rgba(0,0,0,0.85);
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+.ant-table tbody td {
+  padding: 12px 16px;
+  color: rgba(0,0,0,0.65);
+  border-bottom: 1px solid #f0f0f0;
+}
+.ant-table tbody tr { transition: background 0.3s; }
+.ant-table tbody tr:hover { background: #e6f7ff; }
+.ant-table tbody tr:last-child td { border-bottom: none; }
+
+/* ========== Status Tags ========== */
+.tag {
+  display: inline-block;
+  padding: 0 8px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.tag-blue { color: #1890ff; background: #e6f7ff; border-color: #91d5ff; }
+.tag-green { color: #52c41a; background: #f6ffed; border-color: #b7eb8f; }
+.tag-orange { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+.tag-red { color: #f5222d; background: #fff1f0; border-color: #ffa39e; }
+.tag-gray { color: rgba(0,0,0,0.45); background: #fafafa; border-color: #d9d9d9; }
+
+/* ========== Pagination ========== */
+.pagination-bar {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+}
+.pagination { display: flex; align-items: center; gap: 8px; }
+.pagination-info { margin-right: 16px; font-size: 14px; color: rgba(0,0,0,0.65); }
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  color: rgba(0,0,0,0.65);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  user-select: none;
+}
+.page-btn:hover { color: #004098; border-color: #004098; }
+.page-btn.active { background: #004098; color: #fff; border-color: #004098; }
+.page-btn.active:hover { background: #00337a; border-color: #00337a; color: #fff; }
+.page-btn.disabled { color: rgba(0,0,0,0.25); cursor: not-allowed; border-color: #d9d9d9; }
+.page-btn.disabled:hover { color: rgba(0,0,0,0.25); border-color: #d9d9d9; }
+
+/* ========== Modal ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05);
+  width: 820px;
+  max-width: 92vw;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95) translateY(-10px);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+.modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 600; color: rgba(0,0,0,0.85); margin: 0; }
+.modal-close {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  color: rgba(0,0,0,0.25);
+  font-size: 14px;
+  border: none;
+  background: none;
+  padding: 0;
+  line-height: 1;
+}
+.modal-close svg { display: block; }
+.modal-close:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.45); }
+
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  background: #fafafa;
+  border-radius: 0 0 8px 8px;
+}
+
+.modal.reject-modal .modal { width: 520px; }
+
+/* ========== Detail Sections（Ant Design Descriptions 风格） ========== */
+.detail-section { margin-bottom: 28px; }
+.detail-section:last-child { margin-bottom: 0; }
+.detail-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.85);
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 3px solid #004098;
+  line-height: 1;
+}
+/* Ant Design Descriptions 样式 */
+.ant-descriptions {
+  font-size: 14px;
+  line-height: 1.5715;
+  color: rgba(0,0,0,0.65);
+}
+.ant-descriptions-row {
+  display: flex;
+  border-bottom: 1px solid #f0f0f0;
+}
+.ant-descriptions-row:last-child { border-bottom: none; }
+.ant-descriptions-item {
+  flex: 1;
+  padding: 12px 0;
+  display: flex;
+  align-items: baseline;
+}
+.ant-descriptions-item-label {
+  color: rgba(0,0,0,0.45);
+  font-size: 14px;
+  min-width: 100px;
+  flex-shrink: 0;
+  line-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.ant-descriptions-item-label::after {
+  content: '：';
+}
+.ant-descriptions-item-content {
+  color: rgba(0,0,0,0.85);
+  font-size: 14px;
+  flex: 1;
+  word-break: break-all;
+  line-height: 22px;
+}
+.ant-descriptions-item-content.amount {
+  color: #cf1322;
+  font-weight: 600;
+  font-size: 15px;
+}
+/* 变更对比卡片 */
+.change-cards {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.change-card {
+  flex: 1;
+  border-radius: 6px;
+  padding: 14px 16px;
+  border: 1px solid;
+}
+.change-card-before {
+  background: #fff7e6;
+  border-color: #ffe58f;
+}
+.change-card-after {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+}
+.change-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.change-card-before .change-card-title { color: #fa8c16; }
+.change-card-after .change-card-title { color: #52c41a; }
+.change-card-content {
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+.change-card-before .change-card-content { color: rgba(0,0,0,0.45); }
+.change-card-after .change-card-content { color: rgba(0,0,0,0.65); }
+.change-arrow {
+  display: flex;
+  align-items: center;
+  color: #faad14;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.change-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+}
+/* 附加条款（Ant Design Code Block 风格） */
+.terms-block {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.65);
+  line-height: 2;
+  white-space: pre-line;
+}
+
+/* ========== Alert ========== */
+.alert {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.alert-info { background: #e6f7ff; border: 1px solid #91d5ff; color: rgba(0,0,0,0.65); }
+.alert-warning { background: #fffbe6; border: 1px solid #ffe58f; color: rgba(0,0,0,0.65); }
+.alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: rgba(0,0,0,0.65); }
+.alert-success { background: #f6ffed; border: 1px solid #b7eb8f; color: rgba(0,0,0,0.65); }
+.alert-icon { font-size: 15px; line-height: 22px; flex-shrink: 0; }
+.alert-info .alert-icon { color: #1890ff; }
+.alert-warning .alert-icon { color: #faad14; }
+.alert-error .alert-icon { color: #ff4d4f; }
+.alert-success .alert-icon { color: #52c41a; }
+
+/* ========== Result Modal ========== */
+.result-modal .modal { width: 420px; text-align: center; }
+.result-icon { font-size: 64px; margin-bottom: 16px; }
+.result-icon.success { color: #52c41a; }
+.result-icon.error { color: #ff4d4f; }
+.result-title { font-size: 16px; font-weight: 500; color: rgba(0,0,0,0.85); margin-bottom: 8px; }
+.result-desc { font-size: 14px; color: rgba(0,0,0,0.45); margin-bottom: 24px; line-height: 22px; }
+.result-footer { display: flex; justify-content: center; gap: 8px; }
+
+/* ========== Textarea ========== */
+.ant-textarea {
+  padding: 8px 11px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.3s;
+  font-family: inherit;
+  resize: vertical;
+  width: 100%;
+  min-height: 80px;
+}
+.ant-textarea:hover { border-color: #40a9ff; }
+.ant-textarea:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+
+/* ========== Empty State ========== */
+.empty-state { padding: 80px 24px; text-align: center; color: rgba(0,0,0,0.25); }
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-text { font-size: 14px; }
+
+/* ========== Responsive ========== */
+@media (max-width: 1200px) {
+  .detail-grid { grid-template-columns: 1fr; }
+  .filter-bar { flex-direction: column; align-items: flex-start; }
+  .filter-item { width: 100%; }
+  .filter-item .ant-input,
+  .filter-item .ant-select { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Top Navigation Bar ===== -->
+<nav class="top-nav">
+  <div class="top-nav-logo">
+    <img src="https://cloud.metware.cn/index.png" alt="Metware Cloud" onerror="this.style.display='none'">
+    <span>迈维云</span>
+  </div>
+  <div class="top-nav-menu">
+    <div class="top-nav-item active" onclick="showToast('项目中心')">项目中心</div>
+    <div class="top-nav-item" onclick="showToast('云工具')">云工具</div>
+    <div class="top-nav-item" onclick="showToast('云流程')">云流程</div>
+    <div class="top-nav-item" onclick="showToast('云学院')">云学院</div>
+    <div class="top-nav-item" onclick="showToast('产品商城')">产品商城</div>
+    <div class="top-nav-item" onclick="showToast('蛋白数据库')">蛋白数据库</div>
+    <div class="top-nav-item" onclick="showToast('客服中心')">客服中心</div>
+  </div>
+  <div class="top-nav-right">
+    <div class="top-nav-user">
+      <div class="top-nav-avatar">张</div>
+      <span class="top-nav-username">张三</span>
+      <span class="top-nav-caret">▼</span>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- ===== Left Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="menu-section">
+      <div class="menu-item" onclick="showToast('总览')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 01.5.5v11a.5.5 0 01-.5.5h-13a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5zM2 3v10h12V3H2z"/><path d="M3 5h10v1H3V5zm0 2h10v1H3V7zm0 2h7v1H3V9z"/></svg></span>
+        <span class="menu-label">总览</span>
+      </div>
+      <div class="menu-item active" onclick="showToast('我的合同（当前页）')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M3 1.5h7a.5.5 0 01.5.5v3h3a.5.5 0 01.5.5v9a.5.5 0 01-.5.5h-10a.5.5 0 01-.5-.5V11h-3a.5.5 0 01-.5-.5v-9a.5.5 0 01.5-.5h3zM4 2v8h6V2H4zm7 1v8h3V3h-3zM1 2v8h2V2H1zm3 9.5V14h9V6h-2v4.5a.5.5 0 01-.5.5H4z"/></svg></span>
+        <span class="menu-label">我的合同</span>
+      </div>
+      <div class="menu-divider"></div>
+      <div class="menu-item" onclick="showToast('样本信息')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M8 1a4 4 0 00-4 4c0 1.5.8 2.8 2 3.4V10h-1a1 1 0 00-1 1v3h8v-3a1 1 0 00-1-1h-1V8.4c1.2-.6 2-1.9 2-3.4a4 4 0 00-4-4zm0 1a3 3 0 013 3 3 3 0 01-2 2.8V10H7V7.8A3 3 0 018 2z"/></svg></span>
+        <span class="menu-label">样本信息</span>
+      </div>
+      <div class="menu-item" onclick="showToast('我的报告')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M3 1h7l4 4v9a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1zm0 1v12h10V5.5L10 2H3zm2 3h4v1H5V4zm0 2h6v1H5V6zm0 2h6v1H5V8zm0 2h4v1H5v-1z"/></svg></span>
+        <span class="menu-label">我的报告</span>
+      </div>
+      <div class="menu-item" onclick="showToast('流程任务')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1 3h3v3H1V3zm5.5 0h9v3h-9V3zM1 8h3v3H1V8zm5.5 0h9v3h-9V8z"/></svg></span>
+        <span class="menu-label">流程任务</span>
+      </div>
+      <div class="menu-item" onclick="showToast('工具任务')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M14.4 1.2l.4.4a1 1 0 010 1.4l-1.2 1.2 1.8 1.8a.5.5 0 01-.7.7l-1.8-1.8L8 9.8l1.8 1.8a.5.5 0 01-.7.7L7.3 10.4 4.7 13a1.4 1.4 0 01-2-2l2.6-2.6L3.7 6.9a.5.5 0 01.7-.7L6.2 8l4.1-4.1L8.5 2.1a.5.5 0 01.7-.7l1.8 1.8L12.2 2a1 1 0 011.4 0l.8.2z"/></svg></span>
+        <span class="menu-label">工具任务</span>
+      </div>
+      <div class="menu-item" onclick="showToast('我的文件')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 012.5 2h6.086a1.5 1.5 0 011.06.44l4.915 4.914a1.5 1.5 0 01.439 1.06V12.5A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-9zM2.5 3a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V8.914l-4.914-4.914A.5.5 0 008.586 3H2.5z"/></svg></span>
+        <span class="menu-label">我的文件</span>
+      </div>
+      <div class="menu-item" onclick="showToast('问卷列表')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M14 1H2a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V2a1 1 0 00-1-1zM2 2h12v12H2V2zm1.5 2h9v1h-9V4zm0 2h9v1h-9V6zm0 2h6v1h-6V8z"/></svg></span>
+        <span class="menu-label">问卷列表</span>
+      </div>
+      <div class="menu-divider"></div>
+      <div class="menu-item" onclick="showToast('客服中心')">
+        <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M8 1a5 5 0 00-5 5v3l-1 2h12l-1-2V6a5 5 0 00-5-5zm0 13a1.5 1.5 0 01-1.3-.75h2.6A1.5 1.5 0 018 14z"/></svg></span>
+        <span class="menu-label">客服中心</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <div class="main-content">
+    <div class="page-content">
+      <div class="page-header">
+        <h2>我的合同</h2>
+      </div>
+
+      <div class="card">
+        <!-- Tab Filter -->
+        <div class="tab-filter-bar">
+          <div class="tab-item active" data-status="" onclick="switchTab(this, '')">
+            全部 <span class="tab-count" id="countAll">12</span>
+          </div>
+          <div class="tab-item" data-status="待确认" onclick="switchTab(this, '待确认')">
+            待确认 <span class="tab-count tab-count-red" id="countPending">2</span>
+          </div>
+          <div class="tab-item" data-status="已签订" onclick="switchTab(this, '已签订')">
+            已签订 <span class="tab-count" id="countSigned">8</span>
+          </div>
+          <div class="tab-item" data-status="变更中" onclick="switchTab(this, '变更中')">
+            变更中 <span class="tab-count" id="countChanging">1</span>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label>合同编号：</label>
+            <input type="text" class="ant-input" placeholder="请输入合同编号" style="width:180px;" id="filterCode">
+          </div>
+          <div class="filter-item">
+            <label>合同名称：</label>
+            <input type="text" class="ant-input" placeholder="请输入合同名称" style="width:180px;" id="filterName">
+          </div>
+          <div class="filter-item">
+            <label>签订时间：</label>
+            <input type="date" class="ant-date-input" id="filterDateStart" style="width:150px;">
+            <span style="color:rgba(0,0,0,0.25);">~</span>
+            <input type="date" class="ant-date-input" id="filterDateEnd" style="width:150px;">
+          </div>
+          <div class="filter-item">
+            <button class="ant-btn ant-btn-primary" onclick="handleSearch()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a6.5 6.5 0 10-1.4 1.4l3.5 3.5 1.4-1.4-3.5-3.5zM6.5 12a5.5 5.5 0 110-11 5.5 5.5 0 010 11z"/></svg>
+              查询
+            </button>
+            <button class="ant-btn" onclick="handleReset()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 6A5.5 5.5 0 018 1V0A6.5 6.5 0 001.5 6H0l2 3 2-3H2.5zM8 15a6.5 6.5 0 006.5-6.5h1.5l-2-3-2 3h1.5A5.5 5.5 0 018 14V15z"/></svg>
+              重置
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table class="ant-table" id="contractTable">
+            <thead>
+              <tr>
+                <th style="width:150px;">合同编号</th>
+                <th>合同名称</th>
+                <th style="width:80px;">销售</th>
+                <th style="width:80px;">运营</th>
+                <th style="width:120px;">签订时间</th>
+                <th style="width:100px;">合同状态</th>
+                <th style="width:120px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+          <div class="pagination">
+            <span class="pagination-info" id="paginationInfo">共 0 条</span>
+            <div class="page-btn" id="prevBtn" onclick="changePage(-1)">‹</div>
+            <div class="page-btn active" id="page1" onclick="goToPage(1)">1</div>
+            <div class="page-btn" id="page2" onclick="goToPage(2)">2</div>
+            <div class="page-btn" id="nextBtn" onclick="changePage(1)">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 合同详情弹窗 ===== -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">合同详情</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-footer" id="detailModalFooter"></div>
+  </div>
+</div>
+
+<!-- ===== 实名认证提示弹窗 ===== -->
+<div class="modal-overlay result-modal" id="verifyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">实名认证提醒</h3>
+      <button class="modal-close" onclick="closeModal('verifyModal')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body" style="padding:32px 24px;text-align:center;">
+      <div style="width:56px;height:56px;border-radius:50%;background:#fffbe6;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 3L1 23h24L13 3z" stroke="#faad14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 10v6" stroke="#faad14" stroke-width="2.2" stroke-linecap="round"/><circle cx="13" cy="20" r="1.2" fill="#faad14"/></svg>
+      </div>
+      <div class="result-title" style="margin-bottom:8px;">您尚未完成实名认证</div>
+      <div class="result-desc" style="max-width:340px;margin:0 auto 28px;">为保障合同顺利签订，请先完成实名认证后再操作。</div>
+      <div class="result-footer">
+        <button class="ant-btn" onclick="skipVerify()">暂不认证</button>
+        <button class="ant-btn ant-btn-primary" onclick="goToVerify()">去认证</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 拒绝合同弹窗 ===== -->
+<div class="modal-overlay reject-modal" id="rejectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">拒绝合同</h3>
+      <button class="modal-close" onclick="closeModal('rejectModal')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warning">
+        <span class="alert-icon">⚠</span>
+        <span>拒绝合同后，系统将自动退回给销售人员进行修改，确认无误后再重新发送给您。</span>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label style="display:block;margin-bottom:8px;font-size:14px;color:rgba(0,0,0,0.85);">
+          拒绝原因 <span style="color:#ff4d4f;">*</span>
+        </label>
+        <textarea class="ant-textarea" id="rejectReason" placeholder="请输入拒绝原因..." rows="4"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="ant-btn" onclick="closeModal('rejectModal')">取消</button>
+      <button class="ant-btn ant-btn-primary" style="background:#ff4d4f;border-color:#ff4d4f;" onclick="submitReject()" onmouseover="this.style.background='#ff7875'" onmouseout="this.style.background='#ff4d4f'">确认拒绝</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 确认成功弹窗 ===== -->
+<div class="modal-overlay result-modal" id="successModal">
+  <div class="modal">
+    <div class="modal-body" style="padding:40px 24px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#f6ffed;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-10" stroke="#52c41a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="result-title" id="successTitle">操作成功</div>
+      <div class="result-desc" id="successDesc">合同已确认成功，感谢您的签约！</div>
+      <div class="result-footer">
+        <button class="ant-btn ant-btn-primary" onclick="closeModal('successModal')">知道了</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 拒绝成功弹窗 ===== -->
+<div class="modal-overlay result-modal" id="rejectSuccessModal">
+  <div class="modal">
+    <div class="modal-body" style="padding:40px 24px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#fff1f0;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M8 8l12 12M20 8L8 20" stroke="#ff4d4f" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="result-title">拒绝成功</div>
+      <div class="result-desc">合同已退回给销售人员，待其修改后将重新发送给您。</div>
+      <div class="result-footer">
+        <button class="ant-btn ant-btn-primary" onclick="closeModal('rejectSuccessModal')">知道了</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div id="toast" style="position:fixed;top:66px;left:50%;transform:translateX(-50%);z-index:9999;display:none;">
+  <div style="background:#fff;padding:10px 20px;border-radius:6px;box-shadow:0 3px 6px -4px rgba(0,0,0,0.12),0 6px 16px 0 rgba(0,0,0,0.08);font-size:14px;color:rgba(0,0,0,0.65);display:flex;align-items:center;gap:8px;">
+    <span style="color:#004098;">ℹ</span>
+    <span id="toastText"></span>
+  </div>
+</div>
+
+<script>
+// ========== Data（含完整字段，按流程图合同页面结构） ==========
+const allContracts = [
+  { id: 'HT2026040001', name: '2026年代谢组学全谱检测服务合同', type: '技术服务合同', operator: '李明', sales: '王芳', date: '2026-04-01', status: '待确认', amount: '¥121,200.00', amountUpper: '壹拾贰万壹仟贰佰元整', payment: '分期付款（3期）', partyA: '华中科技大学', contact: '张三', phone: '138****1234', idCard: '420***********1234', email: 'zhangsan@hust.edu.cn', address: '湖北省武汉市洪山区珞喻路1037号', productName: '代谢组学全谱检测', techItems: [{productName:'代谢组学全谱检测', techGoal:'对水稻叶片样本进行非靶向代谢组学全谱分析', techContent:'样本前处理、LC-MS/MS检测、数据采集', analysisContent:'代谢物定性鉴定、差异代谢物筛选、KEGG通路富集分析'},{productName:'代谢物标准品定量检测', techGoal:'对水稻叶片中20种目标代谢物进行绝对定量', techContent:'标准品配制、同位素内标法检测、校准曲线定量', analysisContent:'目标代谢物绝对定量、含量差异统计分析'}], amountDetails: [{name:'代谢组学全谱检测',qty:'100',unit:'个',price:'1,280.00',total:'128,000.00'}], fixedCost: '', sequencingData: '1,200', couponDeduction: '¥8,000.00',periodDetails: [{name:'代谢组学全谱检测',qty:'100',unit:'个',cycle:'30',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 数据交付周期：项目完成后30个工作日内\n2. 保密条款：未经甲方许可，乙方不得将数据提供给第三方\n3. 知识产权：分析成果归甲方所有' },
+  { id: 'HT2026040002', name: '2026年蛋白质组学定量分析合同', type: '技术服务合同', operator: '赵强', sales: '刘洋', date: '2026-04-02', status: '待确认', amount: '¥256,000.00', amountUpper: '贰拾伍万陆仟元整', payment: '分期付款（4期）', partyA: '北京大学医学部', contact: '李四', phone: '139****5678', idCard: '110***********5678', email: 'lisi@bjmu.edu.cn', address: '北京市海淀区学院路38号', productName: '蛋白质组学TMT定量分析', techItems: [{productName:'蛋白质组学TMT定量分析', techGoal:'对人血清样本进行TMT标记定量蛋白质组学分析', techContent:'蛋白质提取、酶解、TMT标记、LC-MS/MS检测', analysisContent:'差异蛋白筛选、GO功能注释、KEGG通路富集、蛋白互作网络分析'}], amountDetails: [{name:'TMT定量蛋白质组学',qty:'50',unit:'个',price:'5,120.00',total:'256,000.00'}], fixedCost: '', sequencingData: '', couponDeduction: '', periodDetails: [{name:'TMT定量蛋白质组学',qty:'50',unit:'个',cycle:'45',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '' },
+  { id: 'HT2026030015', name: '2026年转录组测序分析合同', type: '技术服务合同', operator: '李明', sales: '陈静', date: '2026-03-15', status: '已签订', amount: '¥86,600.00', amountUpper: '捌万陆仟陆佰元整', payment: '一次性付款', partyA: '中国科学院遗传所', contact: '张三', phone: '138****1234', idCard: '420***********1234', email: 'zhangsan@hust.edu.cn', address: '北京市朝阳区北辰西路1号院', productName: '转录组测序与差异表达分析', techItems: [{productName:'转录组测序与差异表达分析', techGoal:'对水稻叶片进行转录组测序，鉴定差异表达基因', techContent:'RNA提取、文库构建、Illumina NovaSeq测序、数据质控', analysisContent:'差异表达基因筛选、GO富集分析、KEGG通路分析'},{productName:'实时荧光定量PCR验证', techGoal:'对差异表达基因进行qRT-PCR验证', techContent:'引物设计、RNA反转录、实时荧光定量PCR', analysisContent:'qRT-PCR数据分析、表达量趋势验证'}], amountDetails: [{name:'转录组测序',qty:'30',unit:'个',price:'2,200.00',total:'66,000.00'},{name:'高级生物信息分析',qty:'30',unit:'个',price:'666.67',total:'20,000.00'}], fixedCost: '', sequencingData: '600', couponDeduction: '', periodDetails: [{name:'转录组测序',qty:'30',unit:'个',cycle:'35',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 测序平台：Illumina NovaSeq\n2. 数据量：每个样本≥20M reads\n3. 分析内容：差异表达基因筛选、GO富集、KEGG通路分析' },
+  { id: 'HT2026030010', name: '2026年多组学联合分析合同', type: '技术服务合同', operator: '赵强', sales: '王芳', date: '2026-03-10', status: '已签订', amount: '¥386,000.00', amountUpper: '叁拾捌万陆仟元整', payment: '分期付款（5期）', partyA: '华中科技大学', contact: '张三', phone: '138****1234', idCard: '420***********1234', email: 'zhangsan@hust.edu.cn', address: '湖北省武汉市洪山区珞喻路1037号', productName: '代谢组+蛋白质组联合分析', techItems: [{productName:'代谢组+蛋白质组联合分析', techGoal:'对肿瘤样本进行代谢组学和蛋白质组学联合分析', techContent:'代谢物提取与检测、蛋白质提取与TMT标记、LC-MS/MS检测', analysisContent:'差异代谢物/蛋白筛选、皮尔逊相关性分析、O2PLS联合分析、通路富集'}], amountDetails: [{name:'代谢组学全谱检测',qty:'80',unit:'个',price:'1,280.00',total:'102,400.00'},{name:'TMT定量蛋白质组学',qty:'80',unit:'个',price:'3,545.00',total:'283,600.00'}], fixedCost: '', periodDetails: [{name:'代谢组学全谱检测',qty:'80',unit:'个',cycle:'30',cycleUnit:'天'},{name:'TMT定量蛋白质组学',qty:'80',unit:'个',cycle:'45',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 联合分析包含代谢组学和蛋白质组学\n2. 关联分析：皮尔逊相关性和O2PLS\n3. 提供完整分析报告和可视化图表' },
+  { id: 'HT2026030008', name: '2026年肠道微生物组分析合同', type: '技术服务合同', operator: '李明', sales: '刘洋', date: '2026-03-08', status: '已签订', amount: '¥68,000.00', amountUpper: '陆万捌仟元整', payment: '一次性付款', partyA: '上海交通大学医学院', contact: '王五', phone: '137****9012', idCard: '310***********9012', email: 'wangwu@sjtu.edu.cn', address: '上海市黄浦区重庆南路280号', productName: '肠道微生物16S rRNA测序', techItems: [{productName:'肠道微生物16S rRNA测序', techGoal:'对小鼠肠道微生物进行16S rRNA测序及多样性分析', techContent:'DNA提取、16S V3-V4区PCR扩增、Illumina测序', analysisContent:'OTU聚类、物种注释、多样性分析、差异物种筛选'}], amountDetails: [{name:'16S rRNA测序',qty:'60',unit:'个',price:'800.00',total:'48,000.00'},{name:'高级生物信息分析',qty:'60',unit:'个',price:'333.33',total:'20,000.00'}], fixedCost: '', periodDetails: [{name:'16S rRNA测序',qty:'60',unit:'个',cycle:'25',cycleUnit:'天'}], storage: '云端存储3年', storageMonths: 36, terms: '1. 测序区域：V3-V4区\n2. 数据分析：OTU聚类、物种注释、多样性分析\n3. 交付内容：原始数据、分析报告、可视化图表' },
+  { id: 'HT2026030005', name: '2026年脂质组学检测合同', type: '技术服务合同', operator: '赵强', sales: '陈静', date: '2026-03-05', status: '变更中', amount: '¥196,000.00', amountUpper: '壹拾玖万陆仟元整', payment: '分期付款（3期）', partyA: '浙江大学', contact: '赵六', phone: '136****3456', idCard: '330***********3456', email: 'zhaoliu@zju.edu.cn', address: '浙江省杭州市西湖区余杭塘路866号', productName: '人血浆脂质组学靶向检测', techItems: [{productName:'人血浆脂质组学靶向检测', techGoal:'对人血浆样本进行脂质组学靶向定量检测', techContent:'脂质提取、LC-MS/MS靶向检测、内标定量', analysisContent:'脂质定性鉴定、差异脂质筛选、脂质通路分析'}], amountDetails: [{name:'脂质组学靶向检测',qty:'150',unit:'个',price:'1,306.67',total:'196,000.00'}], fixedCost: '', periodDetails: [{name:'脂质组学靶向检测',qty:'150',unit:'个',cycle:'35',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 检测平台：LC-MS/MS\n2. 检测范围：涵盖8大类脂质\n3. 定量方式：内标法定量\n4. 变更说明：甲方申请追加50个样本的检测', changeInfo: { field: '样本数量、合同金额', before: '样本数量：100个\n合同金额：¥156,000.00', after: '样本数量：150个\n合同金额：¥196,000.00', date: '2026-04-05', from: 'CRM' } },
+  { id: 'HT2026020022', name: '2026年基因组重测序合同', type: '技术服务合同', operator: '李明', sales: '王芳', date: '2026-02-20', status: '已签订', amount: '¥420,000.00', amountUpper: '肆拾贰万元整', payment: '分期付款（4期）', partyA: '中国科学院遗传所', contact: '张三', phone: '138****1234', idCard: '420***********1234', email: 'zhangsan@hust.edu.cn', address: '北京市朝阳区北辰西路1号院', productName: '小麦基因组重测序', techItems: [{productName:'小麦基因组重测序', techGoal:'对小麦品种进行全基因组重测序及变异检测', techContent:'DNA提取、文库构建、Illumina NovaSeq测序', analysisContent:'SNP/InDel检测、变异注释、GWAS关联分析'}], amountDetails: [{name:'基因组重测序（≥15X）',qty:'20',unit:'个',price:'21,000.00',total:'420,000.00'}], fixedCost: '', periodDetails: [{name:'基因组重测序',qty:'20',unit:'个',cycle:'40',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 测序深度：≥15X\n2. 参考基因组：小麦参考基因组 IWGSC\n3. 分析内容：SNP/InDel检测、注释和关联分析' },
+  { id: 'HT2026020018', name: '2026年空间转录组分析合同', type: '技术服务合同', operator: '赵强', sales: '刘洋', date: '2026-02-15', status: '已签订', amount: '¥560,000.00', amountUpper: '伍拾陆万元整', payment: '分期付款（5期）', partyA: '复旦大学', contact: '孙七', phone: '135****7890', idCard: '310***********7890', email: 'sunqi@fudan.edu.cn', address: '上海市杨浦区邯郸路220号', productName: '小鼠脑组织空间转录组分析', techItems: [{productName:'小鼠脑组织空间转录组分析', techGoal:'对小鼠脑组织进行空间转录组测序及细胞通讯分析', techContent:'组织切片、10x Visium建库、测序', analysisContent:'空间差异基因分析、细胞通讯分析、轨迹分析'},{productName:'免疫组化验证', techGoal:'对空间转录组结果进行免疫组化验证', techContent:'组织切片、抗体孵育、显色反应', analysisContent:'蛋白表达空间定位验证、与转录组结果对比'}], amountDetails: [{name:'空间转录组测序',qty:'10',unit:'张',price:'56,000.00',total:'560,000.00'}], fixedCost: '', periodDetails: [{name:'空间转录组测序',qty:'10',unit:'张',cycle:'90',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 技术平台：10x Genomics Visium\n2. 数据分析：空间差异基因、细胞通讯、轨迹分析\n3. 交付周期：90个工作日' },
+  { id: 'HT2026020015', name: '2026年表观遗传学分析合同', type: '技术服务合同', operator: '李明', sales: '陈静', date: '2026-02-10', status: '已签订', amount: '¥198,000.00', amountUpper: '壹拾玖万捌仟元整', payment: '分期付款（3期）', partyA: '南京大学', contact: '周八', phone: '134****2345', idCard: '320***********2345', email: 'zhouba@nju.edu.cn', address: '江苏省南京市鼓楼区汉口路22号', productName: '水稻DNA甲基化测序分析', techItems: [{productName:'水稻DNA甲基化测序分析', techGoal:'对水稻进行全基因组甲基化测序及差异分析', techContent:'DNA提取、WGBS文库构建、Illumina测序', analysisContent:'甲基化水平分析、DMR鉴定、功能注释'}], amountDetails: [{name:'WGBS全基因组甲基化测序',qty:'15',unit:'个',price:'13,200.00',total:'198,000.00'}], fixedCost: '', periodDetails: [{name:'WGBS甲基化测序',qty:'15',unit:'个',cycle:'50',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 测序类型：WGBS全基因组甲基化测序\n2. 分析内容：甲基化水平分析、DMR鉴定、功能注释\n3. 交付内容：原始数据、比对结果、差异甲基化区域列表' },
+  { id: 'HT2026010030', name: '2026年单细胞测序分析合同', type: '技术服务合同', operator: '赵强', sales: '王芳', date: '2026-01-25', status: '已签订', amount: '¥320,000.00', amountUpper: '叁拾贰万元整', payment: '分期付款（4期）', partyA: '中山大学', contact: '吴九', phone: '133****6789', idCard: '440***********6789', email: 'wujiu@sysu.edu.cn', address: '广东省广州市海珠区新港西路135号', productName: '人肿瘤单细胞RNA测序', techItems: [{productName:'人肿瘤单细胞RNA测序', techGoal:'对人肿瘤组织进行单细胞转录组测序分析', techContent:'单细胞悬液制备、10x Chromium建库、测序', analysisContent:'细胞聚类、标记基因鉴定、细胞通讯分析'}], amountDetails: [{name:'单细胞RNA测序',qty:'8',unit:'个',price:'40,000.00',total:'320,000.00'}], fixedCost: '', periodDetails: [{name:'单细胞RNA测序',qty:'8',unit:'个',cycle:'60',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 测序平台：10x Genomics Chromium\n2. 细胞数量：每个样本≥5000个细胞\n3. 分析内容：细胞聚类、标记基因鉴定、细胞通讯分析' },
+  { id: 'HT2026010025', name: '2026年植物激素检测合同', type: '检测服务合同', operator: '李明', sales: '刘洋', date: '2026-01-20', status: '已签订', amount: '¥45,000.00', amountUpper: '肆万伍仟元整', payment: '一次性付款', partyA: '中国农业大学', contact: '郑十', phone: '132****0123', idCard: '110***********0123', email: 'zhengshi@cau.edu.cn', address: '北京市海淀区圆明园西路2号', productName: '水稻叶片植物激素定量检测', techItems: [{productName:'水稻叶片植物激素定量检测', techGoal:'对水稻叶片进行8种植物激素的定量检测', techContent:'激素提取、LC-MS/MS内标法检测', analysisContent:'激素定量分析、差异比较'}], amountDetails: [{name:'植物激素定量检测',qty:'200',unit:'个',price:'225.00',total:'45,000.00'}], fixedCost: '', periodDetails: [{name:'植物激素定量检测',qty:'200',unit:'个',cycle:'15',cycleUnit:'天'}], storage: '云端存储3年', storageMonths: 36, terms: '' },
+  { id: 'HT2026010020', name: '2026年外泌体组学分析合同', type: '技术服务合同', operator: '赵强', sales: '陈静', date: '2026-01-15', status: '已签订', amount: '¥275,000.00', amountUpper: '贰拾柒万伍仟元整', payment: '分期付款（3期）', partyA: '武汉大学', contact: '冯十一', phone: '131****4567', idCard: '420***********4567', email: 'feng11@whu.edu.cn', address: '湖北省武汉市武昌区八一路299号', productName: '人血清外泌体蛋白质组学分析', techItems: [{productName:'人血清外泌体蛋白质组学分析', techGoal:'对人血清外泌体进行蛋白质组学分析', techContent:'外泌体提取（超速离心）、TMT标记、LC-MS/MS检测', analysisContent:'差异蛋白筛选、功能注释、通路富集'}], amountDetails: [{name:'外泌体蛋白质组学',qty:'30',unit:'个',price:'9,166.67',total:'275,000.00'}], fixedCost: '', periodDetails: [{name:'外泌体蛋白质组学',qty:'30',unit:'个',cycle:'50',cycleUnit:'天'}], storage: '云端存储5年', storageMonths: 60, terms: '1. 外泌体提取：超速离心法\n2. 鉴定方法：TMT标记定量蛋白质组学\n3. 分析内容：差异蛋白筛选、功能注释、通路富集' },
+];
+
+// ========== State ==========
+let filteredContracts = [...allContracts];
+let currentPage = 1;
+const pageSize = 10;
+let currentRejectId = null;
+let currentTabStatus = '';
+let userVerified = false; // 用户实名认证状态（模拟：false=未认证，true=已认证）
+let viewUnverified = false; // 暂不认证后查看合同（按钮置灰）
+
+// ========== Tab Switch ==========
+function switchTab(el, status) {
+  currentTabStatus = status;
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  handleSearch();
+}
+
+// ========== Render Table ==========
+function renderTable() {
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageData = filteredContracts.slice(start, end);
+  const tbody = document.getElementById('tableBody');
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无合同数据</div></div></td></tr>';
+  } else {
+    tbody.innerHTML = pageData.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td title="${c.name}" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</td>
+        <td>${c.sales}</td>
+        <td>${c.operator}</td>
+        <td>${c.date}</td>
+        <td>${getStatusTag(c.status)}</td>
+        <td>${getActionBtns(c)}</td>
+      </tr>`).join('');
+  }
+  renderPagination();
+  updateTabCounts();
+}
+
+function updateTabCounts() {
+  document.getElementById('countAll').textContent = allContracts.length;
+  document.getElementById('countSigned').textContent = allContracts.filter(c => c.status === '已签订').length;
+  document.getElementById('countPending').textContent = allContracts.filter(c => c.status === '待确认').length;
+  document.getElementById('countChanging').textContent = allContracts.filter(c => c.status === '变更中').length;
+}
+
+function getStatusTag(status) {
+  const map = { '待确认': 'tag-orange', '已签订': 'tag-green', '变更中': 'tag-blue', '已拒绝': 'tag-red', '已取消': 'tag-gray' };
+  return '<span class="tag ' + (map[status] || 'tag-gray') + '">' + status + '</span>';
+}
+
+function getActionBtns(c) {
+  if (c.status === '待确认') return '<button class="ant-btn ant-btn-link" onclick="handleGoConfirm(\'' + c.id + '\')">去确认</button>';
+  if (c.status === '变更中') return '<button class="ant-btn ant-btn-link" onclick="viewDetail(\'' + c.id + '\', true)">去确认</button>';
+  return '<button class="ant-btn ant-btn-link" onclick="viewDetail(\'' + c.id + '\')">查看详情</button>';
+}
+
+// ========== 待确认合同 - 实名认证拦截 ==========
+let pendingConfirmId = null; // 当前待确认的合同ID
+
+function handleGoConfirm(id) {
+  pendingConfirmId = id;
+  if (!userVerified) {
+    openModal('verifyModal');
+    return;
+  }
+  viewDetail(id, true);
+}
+
+// ========== 实名认证成功回调 ==========
+function goToVerify() {
+  closeModal('verifyModal');
+  // 模拟认证流程：实际场景中跳转实名认证页面，认证完成后回调
+  userVerified = true;
+  showToast('实名认证完成，现在可以查看并签订合同了');
+  // 认证完成后自动打开合同详情进行签订
+  if (pendingConfirmId) {
+    viewDetail(pendingConfirmId, true);
+    pendingConfirmId = null;
+  }
+}
+
+function skipVerify() {
+  closeModal('verifyModal');
+  // 暂不认证，仍然打开合同详情查看，但操作按钮置灰
+  if (pendingConfirmId) {
+    viewUnverified = true;
+    viewDetail(pendingConfirmId, true);
+  }
+}
+
+// ========== Pagination ==========
+function renderPagination() {
+  const total = filteredContracts.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  document.getElementById('paginationInfo').textContent = '共 ' + total + ' 条';
+  const page1 = document.getElementById('page1');
+  const page2 = document.getElementById('page2');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  page1.textContent = 1;
+  page1.className = 'page-btn' + (currentPage === 1 ? ' active' : '');
+  page1.onclick = function() { goToPage(1); };
+  if (totalPages >= 2) {
+    page2.style.display = 'flex';
+    page2.textContent = 2;
+    page2.className = 'page-btn' + (currentPage === 2 ? ' active' : '');
+    page2.onclick = function() { goToPage(2); };
+  } else { page2.style.display = 'none'; }
+  prevBtn.className = 'page-btn' + (currentPage <= 1 ? ' disabled' : '');
+  nextBtn.className = 'page-btn' + (currentPage >= totalPages ? ' disabled' : '');
+}
+function goToPage(page) {
+  const totalPages = Math.ceil(filteredContracts.length / pageSize) || 1;
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  renderTable();
+}
+function changePage(delta) { goToPage(currentPage + delta); }
+
+// ========== Search & Filter ==========
+function handleSearch() {
+  const code = document.getElementById('filterCode').value.trim().toLowerCase();
+  const name = document.getElementById('filterName').value.trim().toLowerCase();
+  const dateStart = document.getElementById('filterDateStart').value;
+  const dateEnd = document.getElementById('filterDateEnd').value;
+  filteredContracts = allContracts.filter(function(c) {
+    if (currentTabStatus && c.status !== currentTabStatus) return false;
+    if (code && c.id.toLowerCase().indexOf(code) === -1) return false;
+    if (name && c.name.toLowerCase().indexOf(name) === -1) return false;
+    if (dateStart && c.date < dateStart) return false;
+    if (dateEnd && c.date > dateEnd) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function handleReset() {
+  document.getElementById('filterCode').value = '';
+  document.getElementById('filterName').value = '';
+  document.getElementById('filterDateStart').value = '';
+  document.getElementById('filterDateEnd').value = '';
+  currentTabStatus = '';
+  document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('.tab-item[data-status=""]').classList.add('active');
+  filteredContracts = [...allContracts];
+  currentPage = 1;
+  renderTable();
+}
+
+// ========== Detail Modal ==========
+function viewDetail(id, showActions) {
+  var c = allContracts.find(function(x) { return x.id === id; });
+  if (!c) return;
+
+  var body = document.getElementById('detailModalBody');
+  var footer = document.getElementById('detailModalFooter');
+
+  // 构建产品明细表格行
+  var detailRows = c.amountDetails.map(function(d) {
+    return '<tr><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">' + d.name + '</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">' + d.qty + ' ' + d.unit + '</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">' + d.price + '</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">' + d.total + '</td></tr>';
+  }).join('');
+  if (c.fixedCost) {
+    detailRows += '<tr><td colspan="3" style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:500;">固定费用</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">' + c.fixedCost + '</td></tr>';
+  }
+  // 测序数据行（如有）
+  if (c.sequencingData) {
+    detailRows += '<tr><td colspan="3" style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:500;">测序</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">' + c.sequencingData + '</td></tr>';
+  }
+  // 项目券抵扣行（如有）
+  if (c.couponDeduction && c.couponDeduction !== '¥0.00') {
+    var couponNum = c.couponDeduction.replace(/[¥,]/g, '');
+    detailRows += '<tr><td colspan="3" style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:500;color:#fa8c16;">项目券抵扣</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;color:#fa8c16;">-' + couponNum + '</td></tr>';
+  }
+  // 计算总金额：产品明细合计 + 测序金额 - 项目券抵扣
+  var totalAmount = 0;
+  c.amountDetails.forEach(function(d) { totalAmount += parseFloat(d.total.replace(/,/g, '')); });
+  if (c.sequencingData) totalAmount += parseFloat(c.sequencingData.replace(/,/g, ''));
+  if (c.couponDeduction && c.couponDeduction !== '¥0.00') totalAmount -= parseFloat(c.couponDeduction.replace(/[¥,]/g, ''));
+  var totalAmountNum = totalAmount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  detailRows += '<tr style="background:#fafafa;"><td colspan="3" style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:600;">总金额</td>' +
+    '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:600;color:#cf1322;">' + totalAmountNum + '</td></tr>';
+
+  // 构建项目周期明细表格行
+  var periodRows = c.periodDetails.map(function(p) {
+    return '<tr><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">' + p.name + '</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">' + p.qty + ' ' + p.unit + '</td>' +
+      '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">' + p.cycle + ' ' + p.cycleUnit + '</td></tr>';
+  }).join('');
+
+  // 数据存储周期内容（严格按文档原文）
+  var storageContent = '乙方在提供最终数据后，可以为甲方继续保留<strong>' + c.storageMonths + '</strong>个月（其中含Lane测序项目，数据保存时间为1个月），若甲方未在届满期前10日书面提出继续保存数据，乙方将在届满期后删除，如果甲方在届满期前10日书面提出继续保存数据，则需签订补充协议并根据实际存储数据量与存储时间进行计费。';
+
+  // 服务协议提示（所有合同详情都展示）
+  var agreementTip = '<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#e6f7ff;border:1px solid #91d5ff;border-radius:6px;font-size:13px;color:rgba(0,0,0,0.65);margin-bottom:20px;">' +
+    '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M2 3h9l4 4v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm0 0a1 1 0 011-1h7l4 4M4 7h8M4 9h6M4 11h5" stroke="#1890ff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+    '<span>签署本合同即表示您同意 <a href="javascript:void(0)" style="color:#004098;font-weight:500;">《平台服务协议》</a> 中的相关条款。</span>' +
+  '</div>';
+
+  body.innerHTML = '' +
+    agreementTip +
+    '<!-- 甲方信息 -->' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">甲方信息</div>' +
+      '<div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row">' +
+          '<div class="ant-descriptions-item"><span class="ant-descriptions-item-label">甲方单位</span><span class="ant-descriptions-item-content">' + c.partyA + '</span></div>' +
+          '<div class="ant-descriptions-item"><span class="ant-descriptions-item-label">联系人姓名</span><span class="ant-descriptions-item-content">' + c.contact + '</span></div>' +
+        '</div>' +
+        '<div class="ant-descriptions-row">' +
+          '<div class="ant-descriptions-item"><span class="ant-descriptions-item-label">手机号码</span><span class="ant-descriptions-item-content">' + c.phone + '</span></div>' +
+          '<div class="ant-descriptions-item"><span class="ant-descriptions-item-label">电子邮箱</span><span class="ant-descriptions-item-content">' + c.email + '</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<!-- 技术服务项目（表格形式，每行可容纳两行文字） -->' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">' + (c.techItems.length > 1 ? '技术服务项目' : '技术服务项目') + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="background:#fafafa;">' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);width:20%;">产品名称</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">技术目标</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">技术内容</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">分析内容</th>' +
+        '</tr></thead>' +
+        '<tbody>' +
+          c.techItems.map(function(item, idx) {
+            var noBorder = (idx < c.techItems.length - 1) ? 'border-bottom:none;' : '';
+            return '<tr>' +
+              '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;vertical-align:middle;' + noBorder + '">' + item.productName + '</td>' +
+              '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:left;vertical-align:middle;line-height:1.8;' + noBorder + '">' + item.techGoal + '</td>' +
+              '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:left;vertical-align:middle;line-height:1.8;' + noBorder + '">' + item.techContent + '</td>' +
+              '<td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:left;vertical-align:middle;line-height:1.8;' + noBorder + '">' + item.analysisContent + '</td>' +
+            '</tr>';
+          }).join('') +
+        '</tbody>' +
+      '</table>' +
+    '</div>' +
+    '<!-- 项目金额 -->' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">项目金额</div>' +
+      '<div style="margin-bottom:12px;font-size:14px;color:rgba(0,0,0,0.65);">' +
+        '<span style="color:rgba(0,0,0,0.45);">总金额：</span>' +
+        '<span style="font-size:18px;font-weight:600;color:#cf1322;">' + totalAmountNum + '</span>' +
+        '<span style="margin-left:12px;color:rgba(0,0,0,0.45);font-size:13px;">（大写：' + c.amountUpper + '）</span>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="background:#fafafa;">' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">产品名称</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">数量</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">单价（元）</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">总金额（元）</th>' +
+        '</tr></thead>' +
+        '<tbody>' + detailRows + '</tbody>' +
+      '</table>' +
+    '</div>' +
+    '<!-- 项目周期 -->' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">项目周期</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="background:#fafafa;">' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">产品名称</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">数量</th>' +
+          '<th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;color:rgba(0,0,0,0.85);">周期</th>' +
+        '</tr></thead>' +
+        '<tbody>' + periodRows + '</tbody>' +
+      '</table>' +
+    '</div>' +
+    '<!-- 附加条款（有则展示，无则隐藏） -->' +
+    (c.terms ? '<div class="detail-section"><div class="detail-section-title">附加条款</div><div class="terms-block">' + c.terms + '</div></div>' : '') +
+    '<!-- 数据存储周期 -->' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">数据存储周期</div>' +
+      '<div class="terms-block">' + storageContent + '</div>' +
+    '</div>';
+
+  if (showActions && (c.status === '待确认' || c.status === '变更中')) {
+    if (viewUnverified) {
+      footer.innerHTML = '<button class="ant-btn" onclick="closeModal(\'detailModal\')">关闭</button>' +
+        '<button class="ant-btn ant-btn-danger" disabled title="请先完成实名认证">拒绝合同</button>' +
+        '<button class="ant-btn ant-btn-primary" disabled title="请先完成实名认证">确认合同</button>';
+    } else {
+      footer.innerHTML = '<button class="ant-btn" onclick="closeModal(\'detailModal\')">取消</button>' +
+        '<button class="ant-btn ant-btn-danger" onclick="openRejectModal(\'' + c.id + '\')">拒绝合同</button>' +
+        '<button class="ant-btn ant-btn-primary" onclick="confirmContract(\'' + c.id + '\')">确认合同</button>';
+    }
+  } else {
+    footer.innerHTML = '<button class="ant-btn" onclick="closeModal(\'detailModal\')">关闭</button>';
+  }
+
+  openModal('detailModal');
+}
+
+function confirmContract(id) {
+  var c = allContracts.find(function(x) { return x.id === id; });
+  if (!c) return;
+  c.status = '已签订';
+  if (c.changeInfo) {
+    document.getElementById('successTitle').textContent = '变更确认成功';
+    document.getElementById('successDesc').textContent = '合同变更已确认成功，变更内容将生效。';
+  } else {
+    document.getElementById('successTitle').textContent = '确认成功';
+    document.getElementById('successDesc').textContent = '合同已确认成功，感谢您的签约！';
+  }
+  closeModal('detailModal');
+  setTimeout(function() {
+    openModal('successModal');
+    handleSearch();
+  }, 300);
+}
+
+// ========== Reject ==========
+function openRejectModal(id) {
+  currentRejectId = id;
+  document.getElementById('rejectReason').value = '';
+  openModal('rejectModal');
+}
+
+function submitReject() {
+  var reason = document.getElementById('rejectReason').value.trim();
+  if (!reason) {
+    document.getElementById('rejectReason').style.borderColor = '#ff4d4f';
+    document.getElementById('rejectReason').style.boxShadow = '0 0 0 2px rgba(255,77,79,0.2)';
+    return;
+  }
+  // 拒绝后合同退回给销售，直接从列表移除
+  var idx = allContracts.findIndex(function(x) { return x.id === currentRejectId; });
+  if (idx > -1) allContracts.splice(idx, 1);
+  closeModal('rejectModal');
+  closeModal('detailModal');
+  setTimeout(function() {
+    openModal('rejectSuccessModal');
+    handleSearch();
+  }, 300);
+}
+
+// ========== Modal Helpers ==========
+function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; if (id === 'detailModal') viewUnverified = false; }
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(overlay.id); });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(function(m) { closeModal(m.id); });
+});
+
+// ========== Toast ==========
+function showToast(msg) {
+  var toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.display = 'none'; }, 2000);
+}
+
+// ========== Init ==========
+renderTable();
+</script>
+
+</body>
+</html>
