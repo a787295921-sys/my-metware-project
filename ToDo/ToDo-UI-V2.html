@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的待办 - 迈维云平台</title>
+<link rel="icon" href="https://cloud.metware.cn/index.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.6/dist/reset.min.css">
+<style>
+/* ============================================================
+   设计基础规范（迈维云平台设计基础规范.docx）
+   主色: #004098  危险色: #ff4d4f  边框: #f0f0f0
+   文字主: rgba(0,0,0,0.85)  文字正文: rgba(0,0,0,0.65)  文字辅助: rgba(0,0,0,0.45)
+   圆角: 4px 默认, 8px 卡片, 12px 弹窗
+   间距: 24px页面大间距, 20px模块间, 16px同模块, 8px按钮组
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  font-size: 14px; color: rgba(0,0,0,0.65); background: #F0F2F5;
+  overflow: hidden; height: 100vh;
+}
+a { color: #004098; text-decoration: none; }
+a:hover { color: #00337a; }
+
+/* ===== Top Nav ===== */
+.top-nav {
+  height: 50px; background: #004098; display: flex; align-items: center;
+  padding: 0 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.top-nav-logo { display: flex; align-items: center; margin-right: 40px; flex-shrink: 0; }
+.top-nav-logo img { height: 28px; margin-right: 8px; }
+.top-nav-logo span { color: #fff; font-size: 16px; font-weight: 600; white-space: nowrap; }
+.top-nav-menu { display: flex; align-items: center; height: 100%; flex: 1; justify-content: center; }
+.top-nav-item {
+  height: 100%; display: flex; align-items: center; padding: 0 16px;
+  color: rgba(255,255,255,0.85); font-size: 16px; cursor: pointer; transition: all 0.2s;
+  white-space: nowrap; position: relative;
+}
+.top-nav-item:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.top-nav-item.active { color: #FF91DC; }
+.top-nav-item.active::after {
+  content: ''; position: absolute; bottom: 0; left: 16px; right: 16px;
+  height: 2px; background: #FF91DC; border-radius: 1px;
+}
+.top-nav-right { display: flex; align-items: center; margin-left: auto; flex-shrink: 0; }
+.top-nav-user { display: flex; align-items: center; gap: 6px; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; }
+.top-nav-user:hover { background: rgba(255,255,255,0.1); }
+.top-nav-avatar { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
+.top-nav-username { font-size: 13px; }
+.top-nav-caret { font-size: 10px; opacity: 0.7; }
+
+/* ===== Layout ===== */
+.layout { display: flex; height: 100vh; padding-top: 50px; }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 180px; min-width: 180px; height: calc(100vh - 50px);
+  background: #fff; overflow-y: auto; border-right: 1px solid #e8e8e8;
+  z-index: 10; padding-top: 8px;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: #f0f0f0; border-radius: 2px; }
+.menu-item {
+  display: flex; align-items: center; padding: 0 20px; height: 42px;
+  color: rgba(0,0,0,0.65); cursor: pointer; transition: all 0.2s; font-size: 14px; user-select: none; position: relative;
+}
+.menu-item:hover { color: #004098; background: #e6f7ff; }
+.menu-item.active { color: #004098; background: #e6f7ff; font-weight: 500; }
+.menu-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #004098; border-radius: 0 2px 2px 0; }
+.menu-item .menu-icon { width: 16px; height: 16px; margin-right: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.menu-item .menu-icon svg { width: 16px; height: 16px; fill: currentColor; }
+.menu-item .menu-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-badge { margin-left: 4px; min-width: 18px; height: 18px; padding: 0 5px; background: #ff4d4f; border-radius: 9px; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.menu-divider { height: 1px; background: #f0f0f0; margin: 8px 16px; }
+
+/* ===== Main Content ===== */
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; background: #F0F2F5; }
+.page-content { flex: 1; padding: 24px; overflow-y: auto; }
+
+/* ===== Views (page navigation) ===== */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ===== Page Header ===== */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.page-header-left h2 { font-size: 18px; font-weight: 500; color: rgba(0,0,0,0.85); line-height: 26px; }
+.page-header-sub { font-size: 13px; color: rgba(0,0,0,0.45); margin-top: 2px; line-height: 20px; }
+.breadcrumb { font-size: 14px; color: rgba(0,0,0,0.45); margin-bottom: 16px; }
+.breadcrumb a { color: #004098; }
+.breadcrumb span { margin: 0 6px; }
+
+/* ===== Summary Cards — 6-slot grid ===== */
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.summary-card {
+  background: #fff; border-radius: 6px; padding: 16px 18px; cursor: pointer;
+  border: 1px solid #f0f0f0; transition: all 0.22s; position: relative; overflow: hidden;
+  border-left: 4px solid #f0f0f0;
+}
+.summary-card:hover { box-shadow: 0 4px 12px rgba(0,64,152,0.12); border-color: #004098; }
+.summary-card.active { border-color: #004098; background: #e6f7ff; }
+.summary-card.placeholder { cursor: default; background: #FAFAFA; }
+.summary-card.placeholder:hover { box-shadow: none; border-color: #f0f0f0; }
+
+.sc-name { font-size: 14px; font-weight: 500; color: rgba(0,0,0,0.85); line-height: 22px; margin-bottom: 10px; }
+.sc-count { font-size: 30px; font-weight: 600; line-height: 1; margin-bottom: 4px; color: rgba(0,0,0,0.85); }
+.sc-label { font-size: 12px; color: rgba(0,0,0,0.45); line-height: 18px; }
+.sc-badge {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 11px; font-weight: 500; padding: 1px 7px;
+  border-radius: 10px; background: #FFF1F0; color: #ff4d4f; border: 1px solid #ffa39e;
+}
+
+/* Card accent colors */
+.sc-contract { border-left-color: #004098; }
+.sc-contract .sc-count { color: #004098; }
+.sc-contract.active { background: #e6f7ff; border-color: #004098; }
+
+.sc-start { border-left-color: #52c41a; }
+.sc-start .sc-count { color: #52c41a; }
+.sc-start.active { background: #f6ffed; border-color: #52c41a; }
+
+.sc-form { border-left-color: #fa8c16; }
+.sc-form .sc-count { color: #fa8c16; }
+.sc-form.active { background: #fff7e6; border-color: #fa8c16; }
+
+.sc-download { border-left-color: #531DAB; }
+.sc-download .sc-count { color: #531DAB; }
+.sc-download.active { background: #F9F0FF; border-color: #531DAB; }
+
+/* ===== Card ===== */
+.card { background: #fff; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02); }
+
+/* ===== Tab Bar ===== */
+.tab-bar { padding: 0 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; }
+.tab-item {
+  padding: 12px 16px; font-size: 14px; color: rgba(0,0,0,0.65);
+  cursor: pointer; transition: color 0.2s; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; user-select: none; white-space: nowrap; line-height: 22px;
+}
+.tab-item:hover { color: #004098; }
+.tab-item.active { color: #004098; font-weight: 500; border-bottom-color: #004098; }
+.tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; font-size: 12px;
+  background: #fafafa; border-radius: 9px; color: rgba(0,0,0,0.45); margin-left: 5px;
+}
+.tab-item.active .tab-count { background: #e6f7ff; color: #004098; }
+.tab-count.danger { background: #FFF1F0; color: #ff4d4f; }
+.sub-tab .tab-count.danger { background: #ff4d4f; color: #fff; }
+
+/* ===== Sub-tab Bar ===== */
+.sub-tab-bar { padding: 10px 24px 0; display: flex; border-bottom: 1px solid #d9d9d9; }
+.sub-tab { padding: 6px 12px; font-size: 14px; color: rgba(0,0,0,0.65); cursor: pointer; transition: color 0.2s; border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none; }
+.sub-tab:hover { color: #004098; }
+.sub-tab.active { color: #004098; font-weight: 500; border-bottom-color: #004098; }
+
+/* ===== Filter Bar ===== */
+.filter-bar { padding: 16px 24px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #f0f0f0; }
+.filter-label { font-size: 14px; color: rgba(0,0,0,0.65); white-space: nowrap; }
+
+/* ===== Form Controls ===== */
+.ant-input {
+  height: 32px; padding: 0 11px; font-size: 14px; color: rgba(0,0,0,0.85); background: #fff;
+  border: 1px solid #d2d6df; border-radius: 6px; outline: none; transition: all 0.25s; font-family: inherit;
+}
+.ant-input:hover { border-color: #004098; }
+.ant-input:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+.ant-input::placeholder { color: rgba(0,0,0,0.25); }
+.ant-select {
+  height: 32px; padding: 0 28px 0 11px; font-size: 14px; color: rgba(0,0,0,0.85); background: #fff;
+  border: 1px solid #d2d6df; border-radius: 6px; outline: none; cursor: pointer; transition: all 0.25s;
+  appearance: none; font-family: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%238B8FA8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 9px center;
+}
+.ant-select:hover { border-color: #004098; }
+.ant-select:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+.ant-date { height: 32px; padding: 0 11px; font-size: 14px; color: rgba(0,0,0,0.85); background: #fff; border: 1px solid #d2d6df; border-radius: 6px; outline: none; font-family: inherit; transition: all 0.25s; cursor: pointer; }
+.ant-date:hover { border-color: #004098; }
+.range-sep { color: rgba(0,0,0,0.25); font-size: 13px; padding: 0 4px; }
+
+/* ===== Buttons ===== */
+.btn {
+  height: 32px; padding: 0 15px; font-size: 14px; border-radius: 6px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  font-family: inherit; white-space: nowrap; user-select: none; transition: all 0.2s;
+  border: 1px solid #d2dfd6; background: #fff; color: rgba(0,0,0,0.65);
+}
+.btn:hover { color: #004098; border-color: #004098; }
+.btn:active { background: #f0f0f0; }
+.btn-primary { background: #004098; color: #fff; border-color: #004098; }
+.btn-primary:hover { background: #00337a; border-color: #00337a; color: #fff; }
+.btn-primary:active { background: #00265c; }
+.btn-danger { color: #ff4d4f; border-color: #ff4d4f; background: #fff; }
+.btn-danger:hover { color: #ff7875; border-color: #ff7875; }
+.btn-danger-fill { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+.btn-danger-fill:hover { background: #ff7875; border-color: #ff7875; color: #fff; }
+.btn-text { border: none; background: none; color: #004098; padding: 0; height: auto; font-size: 14px; }
+.btn-text:hover { color: #00337a; border: none; background: none; }
+.btn-text.danger { color: #ff4d4f; }
+.btn-text.danger:hover { color: #ff7875; }
+.btn-sm { height: 24px; padding: 0 10px; font-size: 13px; }
+.btn[disabled], .btn-primary[disabled], .btn-danger-fill[disabled] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+.btn-success:hover { background: #237804; border-color: #237804; color: #fff; }
+
+/* ===== Table ===== */
+.table-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl thead th {
+  background: #fafafa; padding: 12px 16px; text-align: left;
+  font-weight: 500; color: rgba(0,0,0,0.85); border-bottom: 1px solid #f0f0f0; white-space: nowrap;
+}
+.tbl tbody td { padding: 12px 16px; color: rgba(0,0,0,0.65); border-bottom: 1px solid #f0f0f0; }
+.tbl tbody td.nowrap { white-space: nowrap; }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover { background: #e6f7ff; }
+
+/* ===== Tags ===== */
+.tag {
+  display: inline-block; padding: 0 8px; height: 22px; line-height: 22px;
+  border-radius: 6px; font-size: 12px; font-weight: 400; border: 1px solid; white-space: nowrap;
+}
+.tag-blue   { color: #1890ff; background: #e6f7ff; border-color: #91d5ff; }
+.tag-green  { color: #52c41a; background: #F6FFED; border-color: #B7EB8F; }
+.tag-orange { color: #fa8c16; background: #FFF7E6; border-color: #ffd591; }
+.tag-red    { color: #ff4d4f; background: #FFF1F0; border-color: #ffa39e; }
+.tag-gray   { color: rgba(0,0,0,0.45); background: #fafafa; border-color: #f0f0f0; }
+.tag-purple { color: #531DAB; background: #F9F0FF; border-color: #D3ADF7; }
+
+/* ===== Pagination ===== */
+.pagination-bar { padding: 16px 24px; display: flex; align-items: center; justify-content: flex-end; border-top: 1px solid #f0f0f0; }
+.pagination { display: flex; align-items: center; gap: 6px; }
+.pg-info { font-size: 14px; color: rgba(0,0,0,0.45); margin-right: 12px; }
+.pg-btn { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #f0f0f0; border-radius: 6px; background: #fff; color: rgba(0,0,0,0.65); cursor: pointer; font-size: 14px; user-select: none; padding: 0 6px; transition: all 0.2s; }
+.pg-btn:hover { color: #004098; border-color: #004098; }
+.pg-btn.active { background: #004098; color: #fff; border-color: #004098; }
+.pg-btn.disabled { color: rgba(0,0,0,0.25); cursor: not-allowed; }
+.pg-btn.disabled:hover { border-color: #f0f0f0; color: rgba(0,0,0,0.25); }
+
+/* ===== Modal ===== */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 72px;
+  opacity: 0; visibility: hidden; transition: opacity 0.25s;
+}
+.modal-mask.open { opacity: 1; visibility: visible; }
+.modal-box {
+  background: #fff; border-radius: 8px; width: 680px; max-width: 92vw; max-height: 80vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 3px 8px rgba(0,0,0,0.08);
+  transform: translateY(-12px) scale(0.97); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-mask.open .modal-box { transform: translateY(0) scale(1); }
+.modal-lg .modal-box { width: 860px; }
+.modal-sm .modal-box { width: 460px; }
+.modal-hd { padding: 18px 24px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.modal-title { font-size: 16px; font-weight: 500; color: rgba(0,0,0,0.85); }
+.modal-close { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; transition: background 0.2s; color: rgba(0,0,0,0.45); border: none; background: none; }
+.modal-close:hover { background: #F0F2F5; color: rgba(0,0,0,0.65); }
+.modal-bd { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-bd::-webkit-scrollbar { width: 6px; }
+.modal-bd::-webkit-scrollbar-thumb { background: #f0f0f0; border-radius: 3px; }
+.modal-ft { padding: 14px 20px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; background: #FAFAFA; border-radius: 0 0 8px 8px; }
+
+/* ===== Alert Box ===== */
+.alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 0; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; line-height: 20px; }
+.alert-info    { background: #E6F7FF; border: 1px solid #91D5FF; color: rgba(0,0,0,0.65); }
+.alert-warning { background: #fff7e6; border: 1px solid #FFE58F; color: rgba(0,0,0,0.65); }
+.alert-error   { background: #FFF1F0; border: 1px solid #ffa39e; color: rgba(0,0,0,0.65); }
+.alert-success { background: #F6FFED; border: 1px solid #B7EB8F; color: rgba(0,0,0,0.65); }
+.alert-ico { flex-shrink: 0; line-height: 20px; font-size: 14px; }
+.alert-info    .alert-ico { color: #1890FF; }
+.alert-warning .alert-ico { color: #FAAD14; }
+.alert-error   .alert-ico { color: #ff4d4f; }
+.alert-success .alert-ico { color: #52C41A; }
+
+/* ===== Detail Sections ===== */
+.ds { margin-bottom: 24px; }
+.ds:last-child { margin-bottom: 0; }
+.ds-title { font-size: 14px; font-weight: 500; color: rgba(0,0,0,0.85); margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #004098; line-height: 22px; }
+.desc-grid { font-size: 14px; }
+.desc-row { display: flex; border-bottom: 1px solid #f0f0f0; }
+.desc-row:last-child { border-bottom: none; }
+.desc-item { flex: 1; padding: 10px 0; display: flex; }
+.desc-lbl { color: rgba(0,0,0,0.45); min-width: 85px; flex-shrink: 0; line-height: 22px; white-space: nowrap; }
+.desc-lbl::after { content: '：'; }
+.desc-val { color: rgba(0,0,0,0.85); flex: 1; line-height: 22px; word-break: break-all; }
+.desc-val.amount { color: #CF1322; font-weight: 600; font-size: 16px; }
+
+/* ===== Code Block (terms) ===== */
+.terms-block { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: rgba(0,0,0,0.65); line-height: 2; white-space: pre-line; }
+
+/* ===== Form Group ===== */
+.form-group { margin-bottom: 16px; }
+.form-lbl { display: block; font-size: 14px; color: rgba(0,0,0,0.85); margin-bottom: 6px; line-height: 22px; }
+.form-lbl .req { color: #ff4d4f; }
+.ant-textarea { width: 100%; min-height: 90px; padding: 8px 11px; font-size: 14px; color: rgba(0,0,0,0.85); background: #fff; border: 1px solid #d2d6df; border-radius: 6px; outline: none; resize: vertical; font-family: inherit; transition: all 0.25s; }
+.ant-textarea:hover { border-color: #004098; }
+.ant-textarea:focus { border-color: #004098; box-shadow: 0 0 0 2px rgba(0,64,152,0.2); }
+.ant-textarea::placeholder { color: rgba(0,0,0,0.25); }
+
+/* ===== Timeline ===== */
+.timeline { padding: 0; list-style: none; }
+.tl-item { position: relative; padding: 0 0 18px 28px; }
+.tl-item::before { content: ''; position: absolute; left: 8px; top: 20px; width: 1px; height: calc(100% - 12px); background: #f0f0f0; }
+.tl-item:last-child::before { display: none; }
+.tl-dot { position: absolute; left: 2px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid; background: #fff; }
+.tl-dot.blue { border-color: #004098; }
+.tl-dot.green { border-color: #52C41A; }
+.tl-dot.orange { border-color: #FAAD14; }
+.tl-dot.gray { border-color: #f0f0f0; }
+.tl-dot.red { border-color: #ff4d4f; }
+.tl-title { font-size: 14px; font-weight: 500; color: rgba(0,0,0,0.85); line-height: 22px; }
+.tl-time { font-size: 12px; color: rgba(0,0,0,0.45); line-height: 18px; }
+.tl-note { font-size: 13px; color: rgba(0,0,0,0.65); background: #fafafa; border-radius: 6px; padding: 6px 10px; margin-top: 4px; border: 1px solid #f0f0f0; line-height: 20px; }
+
+/* ===== Result Modal ===== */
+.result-center { text-align: center; padding: 12px 0 4px; }
+.result-icon-wrap { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+.result-icon-wrap.success { background: #F6FFED; }
+.result-icon-wrap.error { background: #FFF1F0; }
+.result-icon-wrap.warn { background: #fff7e6; }
+.result-title { font-size: 16px; font-weight: 500; color: rgba(0,0,0,0.85); margin-bottom: 8px; }
+.result-desc { font-size: 14px; color: rgba(0,0,0,0.45); line-height: 22px; }
+
+/* ===== Upload Area ===== */
+.upload-zone { border: 1px dashed #d9d9d9; border-radius: 6px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.25s; background: #FAFAFA; }
+.upload-zone:hover { border-color: #004098; background: #e6f7ff; }
+.upload-zone-icon { font-size: 32px; margin-bottom: 8px; color: rgba(0,0,0,0.45); }
+.upload-zone-text { font-size: 14px; color: rgba(0,0,0,0.65); margin-bottom: 4px; }
+.upload-zone-hint { font-size: 12px; color: rgba(0,0,0,0.45); }
+
+/* ===== Toast ===== */
+#toast-wrap { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { padding: 8px 18px; border-radius: 6px; font-size: 14px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: rgba(0,0,0,0.65); display: flex; align-items: center; gap: 8px; opacity: 0; transform: translateY(-8px); transition: all 0.25s; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.t-success { border-left: 3px solid #52C41A; }
+.toast.t-error   { border-left: 3px solid #ff4d4f; }
+.toast.t-warn    { border-left: 3px solid #FAAD14; }
+.toast.t-info    { border-left: 3px solid #004098; }
+
+/* ===== Data section info card ===== */
+.info-card { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+.info-card-row { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+.info-kv { display: flex; align-items: baseline; gap: 4px; }
+.info-kv .k { font-size: 13px; color: rgba(0,0,0,0.45); }
+.info-kv .v { font-size: 14px; color: rgba(0,0,0,0.85); font-weight: 500; }
+
+/* ===== Table inline action spacing ===== */
+.action-group { display: flex; align-items: center; gap: 12px; }
+.action-sep { color: #f0f0f0; }
+
+/* ===== Responsive ===== */
+@media (max-width: 1100px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+
+<!-- ===== Top Nav ===== -->
+<nav class="top-nav">
+  <div class="top-nav-logo">
+    <img src="https://cloud.metware.cn/index.png" alt="" onerror="this.style.display='none'">
+    <span>迈维云</span>
+  </div>
+  <div class="top-nav-menu">
+    <div class="top-nav-item active">项目中心</div>
+    <div class="top-nav-item" onclick="toast('云工具')">云工具</div>
+    <div class="top-nav-item" onclick="toast('云流程')">云流程</div>
+    <div class="top-nav-item" onclick="toast('云学院')">云学院</div>
+    <div class="top-nav-item" onclick="toast('产品商城')">产品商城</div>
+    <div class="top-nav-item" onclick="toast('蛋白数据库')">蛋白数据库</div>
+    <div class="top-nav-item" onclick="toast('客服中心')">客服中心</div>
+  </div>
+  <div class="top-nav-right">
+    <div class="top-nav-user">
+      <div class="top-nav-avatar">张</div>
+      <span class="top-nav-username">张三</span>
+      <span class="top-nav-caret">▾</span>
+    </div>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="menu-item" onclick="toast('总览')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 01.5.5v11a.5.5 0 01-.5.5h-13a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5zM2 3v10h12V3H2z"/><path d="M3 5h10v1H3V5zm0 2h10v1H3V7zm0 2h7v1H3V9z"/></svg></span>
+      <span class="menu-label">总览</span>
+    </div>
+    <div class="menu-item active" id="sidebarTodo">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1 3h3v3H1V3zm5.5.5h8v2h-8v-2zM1 8h3v3H1V8zm5.5.5h8v2h-8v-2z"/></svg></span>
+      <span class="menu-label">我的待办</span>
+      <span class="menu-badge" id="sidebarBadge">6</span>
+    </div>
+    <div class="menu-item" onclick="toast('我的合同')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M3 1.5h7a.5.5 0 01.5.5v3h3a.5.5 0 01.5.5v9a.5.5 0 01-.5.5h-10a.5.5 0 01-.5-.5V11h-3a.5.5 0 01-.5-.5v-9a.5.5 0 01.5-.5h3zM4 2v8h6V2H4zm7 1v8h3V3h-3zM1 2v8h2V2H1zm3 9.5V14h9V6h-2v4.5a.5.5 0 01-.5.5H4z"/></svg></span>
+      <span class="menu-label">我的合同</span>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" onclick="toast('样本信息')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M8 1a4 4 0 00-4 4c0 1.5.8 2.8 2 3.4V10H5a1 1 0 00-1 1v3h8v-3a1 1 0 00-1-1h-1V8.4c1.2-.6 2-1.9 2-3.4a4 4 0 00-4-4z"/></svg></span>
+      <span class="menu-label">样本信息</span>
+    </div>
+    <div class="menu-item" onclick="toast('我的报告')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M3 1h7l4 4v9a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1zm0 1v12h10V5.5L10 2H3z"/></svg></span>
+      <span class="menu-label">我的报告</span>
+    </div>
+    <div class="menu-item" onclick="toast('流程任务')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1 3h3v3H1V3zm5.5 0h9v3h-9V3zM1 8h3v3H1V8zm5.5 0h9v3h-9V8z"/></svg></span>
+      <span class="menu-label">流程任务</span>
+    </div>
+    <div class="menu-item" onclick="toast('我的文件')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 012.5 2h6.086a1.5 1.5 0 011.06.44l4.915 4.914A1.5 1.5 0 0115 8.5V12.5A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-9z"/></svg></span>
+      <span class="menu-label">我的文件</span>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" onclick="toast('客服中心')">
+      <span class="menu-icon"><svg viewBox="0 0 16 16"><path d="M8 1a5 5 0 00-5 5v3l-1 2h12l-1-2V6a5 5 0 00-5-5zm0 13a1.5 1.5 0 01-1.3-.75h2.6A1.5 1.5 0 018 14z"/></svg></span>
+      <span class="menu-label">客服中心</span>
+    </div>
+  </aside>
+
+  <div class="main-content">
+
+    <!-- ==================== VIEW: 我的待办（主页） ==================== -->
+    <div class="view active page-content" id="view-main">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <span style="font-size:16px; font-weight:600; color:rgba(0,0,0,0.85); margin-right:12px;">我的待办</span>
+          <span class="page-header-sub">共 <strong id="totalPending">6</strong> 条待处理事项</span>
+        </div>
+        <button class="btn" onclick="toast('已刷新', 'success')">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 6A5.5 5.5 0 018 1V0A6.5 6.5 0 001.5 6H0l2 3 2-3H2.5zM8 15a6.5 6.5 0 006.5-6.5h1.5l-2-3-2 3h1.5A5.5 5.5 0 018 14V15z"/></svg>
+          刷新
+        </button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-grid" id="statsGrid">
+        <div class="summary-card sc-contract" onclick="switchTab('contract')">
+          <div class="sc-name">合同确认</div>
+          <div class="sc-count" id="cnt-contract">3</div>
+          <div class="sc-label">待确认</div>
+          <div class="sc-badge" id="badge-contract" style="display:">待确认</div>
+        </div>
+        <div class="summary-card sc-start" onclick="switchTab('start')">
+          <div class="sc-name">启动确认</div>
+          <div class="sc-count" id="cnt-start">2</div>
+          <div class="sc-label">待确认</div>
+          <div class="sc-badge" id="badge-start" style="display:">待确认</div>
+        </div>
+        <div class="summary-card sc-form" onclick="switchTab('form')">
+          <div class="sc-name">填采集表</div>
+          <div class="sc-count" id="cnt-form">1</div>
+          <div class="sc-label">待填写</div>
+          <div class="sc-badge" id="badge-form" style="display:">待填写</div>
+        </div>
+        <div class="summary-card sc-download" onclick="switchTab('download')">
+          <div class="sc-name">数据待下载</div>
+          <div class="sc-count" id="cnt-download">3</div>
+          <div class="sc-badge" id="badge-download" style="display:">待下载</div>
+          <div class="sc-label">待下载</div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+
+        <!-- ==== Panel: 合同确认 ==== -->
+        <div id="panel-contract">
+          <div class="filter-bar">
+            <input type="text" class="ant-input" id="c-filterCode" placeholder="合同编号" style="width:178px;">
+            <input type="text" class="ant-input" id="c-filterName" placeholder="合同名称" style="width:178px;">
+            <input type="date" class="ant-date" placeholder="开始日期" style="width:178px;">
+            <span class="range-sep">~</span>
+            <input type="date" class="ant-date" placeholder="结束日期" style="width:178px;">
+            <button class="btn btn-primary" onclick="toast('搜索成功', 'success')">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a6.5 6.5 0 10-1.4 1.4l3.5 3.5 1.4-1.4-3.5-3.5zM6.5 12a5.5 5.5 0 110-11 5.5 5.5 0 010 11z"/></svg>
+              搜索
+            </button>
+            <button class="btn" onclick="toast('已重置')">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:150px;">合同编号</th>
+                  <th>合同名称</th>
+                  <th style="width:80px;">销售</th>
+                  <th style="width:80px;">运营</th>
+                  <th style="width:120px;">签订时间</th>
+                  <th style="width:100px;">状态</th>
+                  <th style="width:120px;" class="nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody id="contract-tbody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination">
+              <span class="pg-info" id="c-pgInfo">共 0 条</span>
+              <div class="pg-btn disabled">‹</div>
+              <div class="pg-btn active">1</div>
+              <div class="pg-btn">›</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==== Panel: 启动确认 ==== -->
+        <div id="panel-start" style="display:none;">
+          <div class="sub-tab-bar">
+            <div class="sub-tab active" id="st-tab0" onclick="switchStartSub(0)" style="font-size:16px;">待确认 <span class="tab-count danger">2</span></div>
+            <div class="sub-tab" id="st-tab3" onclick="switchStartSub(3)" style="font-size:16px;">全部 <span class="tab-count">8</span></div>
+          </div>
+          <div class="filter-bar">
+            <input type="text" class="ant-input" placeholder="合同编号" style="width:178px;">
+            <input type="text" class="ant-input" placeholder="合同名称" style="width:178px;">
+            <input type="date" class="ant-date" placeholder="开始日期" style="width:178px;">
+            <span class="range-sep">~</span>
+            <input type="date" class="ant-date" placeholder="结束日期" style="width:178px;">
+            <button class="btn btn-primary" onclick="toast('搜索成功', 'success')">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a6.5 6.5 0 10-1.4 1.4l3.5 3.5 1.4-1.4-3.5-3.5zM6.5 12a5.5 5.5 0 110-11 5.5 5.5 0 010 11z"/></svg>
+              搜索
+            </button>
+            <button class="btn" onclick="toast('已重置')">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:150px;" class="nowrap">合同编号</th>
+                  <th style="width:150px;" class="nowrap">子项目编号</th>
+                  <th>合同名称</th>
+                  <th>产品名称</th>
+                  <th style="width:80px;">销售</th>
+                  <th style="width:80px;">运营</th>
+                  <th style="width:135px;">创建时间</th>
+                  <th style="width:90px;">状态</th>
+                  <th style="width:90px;" class="nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody id="start-tbody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination">
+              <span class="pg-info">共 8 条</span>
+              <div class="pg-btn disabled">‹</div>
+              <div class="pg-btn active">1</div>
+              <div class="pg-btn">›</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==== Panel: 填采集表 ==== -->
+        <div id="panel-form" style="display:none;">
+          <div class="alert alert-info" style="margin:20px 24px 0;">
+            <span class="alert-ico">ℹ</span>
+            <span>点击"去填写"将跳转到样本信息 — 生信采集表页面，在该页面完成采集表填写。完成后待办状态自动更新。</span>
+          </div>
+          <div class="filter-bar">
+            <input type="text" class="ant-input" placeholder="合同编号" style="width:178px;">
+            <input type="text" class="ant-input" placeholder="合同名称" style="width:178px;">
+            <button class="btn btn-primary" onclick="toast('搜索成功', 'success')">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a6.5 6.5 0 10-1.4 1.4l3.5 3.5 1.4-1.4-3.5-3.5zM6.5 12a5.5 5.5 0 110-11 5.5 5.5 0 010 11z"/></svg>
+              搜索
+            </button>
+            <button class="btn" onclick="toast('已重置')">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:150px;" class="nowrap">合同编号</th>
+                  <th style="width:150px;" class="nowrap">子项目编号</th>
+                  <th>合同名称</th>
+                  <th>产品名称</th>
+                  <th style="width:80px;">销售</th>
+                  <th style="width:80px;">运营</th>
+                  <th style="width:135px;">创建时间</th>
+                  <th style="width:90px;">状态</th>
+                  <th style="width:90px;" class="nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody id="form-tbody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination">
+              <span class="pg-info">共 5 条</span>
+              <div class="pg-btn disabled">‹</div>
+              <div class="pg-btn active">1</div>
+              <div class="pg-btn">›</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==== Panel: 数据待下载 ==== -->
+        <div id="panel-download" style="display:none;">
+          <div class="sub-tab-bar">
+            <div class="sub-tab active" id="dl-tab0" onclick="switchDownloadSub(0)" style="font-size:16px;">结题报告 <span class="tab-count">2</span></div>
+            <div class="sub-tab" id="dl-tab1" onclick="switchDownloadSub(1)" style="font-size:16px;">原始数据 <span class="tab-count danger">1</span></div>
+          </div>
+          <div class="filter-bar">
+            <input type="text" class="ant-input" placeholder="合同编号" style="width:178px;">
+            <input type="text" class="ant-input" placeholder="产品名称" style="width:178px;">
+            <button class="btn btn-primary" onclick="toast('搜索成功', 'success')">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11.7 10.3a6.5 6.5 0 10-1.4 1.4l3.5 3.5 1.4-1.4-3.5-3.5zM6.5 12a5.5 5.5 0 110-11 5.5 5.5 0 010 11z"/></svg>
+              搜索
+            </button>
+            <button class="btn" onclick="toast('已重置')">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl" id="dl-table">
+              <thead id="dl-thead"></thead>
+              <tbody id="download-tbody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination">
+              <span class="pg-info" id="dl-pg-info">共 0 条</span>
+              <div class="pg-btn disabled">‹</div>
+              <div class="pg-btn active">1</div>
+              <div class="pg-btn">›</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /card -->
+    </div><!-- /view-main -->
+
+
+    <!-- ==================== VIEW: 原始数据明细 ==================== -->
+    <div class="view page-content" id="view-rawdata">
+      <div class="breadcrumb">
+        <a href="javascript:void(0)" onclick="navTo('view-main'); switchTab('download')">我的待办</a>
+        <span>›</span>
+        数据待下载 — 原始数据明细
+      </div>
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2>原始数据明细</h2>
+          <div class="page-header-sub">MW-2025-S-0220-001 · 全外显子组测序（WES）</div>
+        </div>
+        <button class="btn" onclick="navTo('view-main'); switchTab('download')">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2L1 7l5 5V9h9V5H6V2z"/></svg>
+          返回
+        </button>
+      </div>
+      <!-- Info card -->
+      <div class="info-card">
+        <div class="info-card-row">
+          <div class="info-kv"><span class="k">合同编号：</span><span class="v">MW-2025-C-0220</span></div>
+          <div class="info-kv"><span class="k">子项目编号：</span><span class="v">MW-2025-S-0220-001</span></div>
+          <div class="info-kv"><span class="k">产品名称：</span><span class="v">全外显子组测序（WES）</span></div>
+          <div class="info-kv"><span class="k">任务生成时间：</span><span class="v">2025-06-11</span></div>
+          <div class="info-kv"><span class="k">数据有效期：</span><span class="v" style="color:#ff4d4f;">2025-07-11（剩余30天）</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <span class="filter-label">文件名称：</span>
+          <input type="text" class="ant-input" placeholder="请输入文件名称" style="width:178px;">
+          <button class="btn btn-primary" onclick="toast('搜索成功', 'success')">搜索</button>
+          <button class="btn" onclick="toast('已重置')">重置</button>
+          <div style="margin-left:auto;">
+            <button class="btn btn-primary" onclick="toast('开始打包下载所有文件...', 'success')">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-6 2h12v1H2v-1z"/></svg>
+              一键下载全部
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>文件名称</th>
+                <th style="width:100px;">文件大小</th>
+                <th style="width:90px;">文件格式</th>
+                <th style="width:130px;">生成时间</th>
+                <th style="width:90px;">下载状态</th>
+                <th style="width:80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Sample01_R1.fastq.gz</td><td>3.2 GB</td><td>FASTQ</td><td>2025-06-11 09:00</td><td><span class="tag tag-orange">未下载</span></td><td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('开始下载 Sample01_R1.fastq.gz', 'success')">下载</button></td></tr>
+              <tr><td>Sample01_R2.fastq.gz</td><td>3.1 GB</td><td>FASTQ</td><td>2025-06-11 09:00</td><td><span class="tag tag-orange">未下载</span></td><td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('开始下载 Sample01_R2.fastq.gz', 'success')">下载</button></td></tr>
+              <tr><td>Sample02_R1.fastq.gz</td><td>3.4 GB</td><td>FASTQ</td><td>2025-06-11 09:05</td><td><span class="tag tag-orange">未下载</span></td><td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('开始下载 Sample02_R1.fastq.gz', 'success')">下载</button></td></tr>
+              <tr><td>Sample02_R2.fastq.gz</td><td>3.3 GB</td><td>FASTQ</td><td>2025-06-11 09:05</td><td><span class="tag tag-green">已下载</span></td><td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('重新下载 Sample02_R2.fastq.gz', 'success')">重新下载</button></td></tr>
+              <tr><td>MD5SUM.txt</td><td>2 KB</td><td>TXT</td><td>2025-06-11 09:10</td><td><span class="tag tag-orange">未下载</span></td><td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('开始下载 MD5SUM.txt', 'success')">下载</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <div class="pagination">
+            <span class="pg-info">共 5 条</span>
+            <div class="pg-btn disabled">‹</div>
+            <div class="pg-btn active">1</div>
+            <div class="pg-btn">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /layout -->
+
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- === 合同确认详情（与我的合同页面流程完全一致） === -->
+<div class="modal-mask" id="modal-contract">
+  <div class="modal-box modal-lg">
+    <div class="modal-hd">
+      <span class="modal-title" id="mc-title">合同确认</span>
+      <button class="modal-close" onclick="closeModal('modal-contract')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-bd" id="mc-body"></div>
+    <div class="modal-ft" id="mc-footer"></div>
+  </div>
+</div>
+
+<!-- === 实名认证提示 === -->
+<div class="modal-mask modal-sm" id="modal-verify">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span class="modal-title">实名认证提醒</span>
+      <button class="modal-close" onclick="closeModal('modal-verify')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-bd">
+      <div class="result-center">
+        <div class="result-icon-wrap warn">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4L2 24h24L14 4z" stroke="#FAAD14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11v6" stroke="#FAAD14" stroke-width="2.2" stroke-linecap="round"/><circle cx="14" cy="20.5" r="1.3" fill="#FAAD14"/></svg>
+        </div>
+        <div class="result-title">您尚未完成实名认证</div>
+        <div class="result-desc">为保障合同顺利签订，请先完成实名认证后再操作。</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="skipVerify()">暂不认证</button>
+      <button class="btn btn-primary" onclick="doVerify()">去认证</button>
+    </div>
+  </div>
+</div>
+
+<!-- === 拒绝合同 === -->
+<div class="modal-mask modal-sm" id="modal-reject">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span class="modal-title" id="reject-title">拒绝合同</span>
+      <button class="modal-close" onclick="closeModal('modal-reject')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-bd">
+      <div class="alert alert-warning">
+        <span class="alert-ico">⚠</span>
+        <span id="reject-hint">拒绝后，系统将通知销售人员进行修改，修改完成后将重新发送给您确认。</span>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">拒绝原因 <span class="req">*</span></label>
+        <textarea class="ant-textarea" id="reject-reason" placeholder="请输入拒绝原因..."></textarea>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="closeModal('modal-reject')">取消</button>
+      <button class="btn btn-danger-fill" onclick="submitReject()">确认拒绝</button>
+    </div>
+  </div>
+</div>
+
+<!-- === 启动确认详情 === -->
+<div class="modal-mask modal-lg" id="modal-start">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span class="modal-title">启动确认详情</span>
+      <button class="modal-close" onclick="closeModal('modal-start')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-bd" id="ms-body"></div>
+    <div class="modal-ft" id="ms-footer"></div>
+  </div>
+</div>
+
+<!-- === 确认成功 === -->
+<div class="modal-mask modal-sm" id="modal-success">
+  <div class="modal-box">
+    <div class="modal-bd">
+      <div class="result-center">
+        <div class="result-icon-wrap success">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-10" stroke="#52C41A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="result-title" id="suc-title">操作成功</div>
+        <div class="result-desc" id="suc-desc"></div>
+      </div>
+    </div>
+    <div class="modal-ft" style="justify-content:center;">
+      <button class="btn btn-primary" onclick="closeModal('modal-success')">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- === 拒绝成功 === -->
+<div class="modal-mask modal-sm" id="modal-reject-success">
+  <div class="modal-box">
+    <div class="modal-bd">
+      <div class="result-center">
+        <div class="result-icon-wrap error">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M8 8l12 12M20 8L8 20" stroke="#ff4d4f" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="result-title" id="rej-suc-title">拒绝成功</div>
+        <div class="result-desc" id="rej-suc-desc">相关人员将收到通知并跟进处理。</div>
+      </div>
+    </div>
+    <div class="modal-ft" style="justify-content:center;">
+      <button class="btn btn-primary" onclick="closeModal('modal-reject-success')">知道了</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ============ DATA ============
+const contractData = [
+  { id:'HT2026040001', name:'2026年代谢组学全谱检测服务合同', operator:'李明', sales:'王芳', date:'2026-04-01', status:'待确认', amount:'¥128,000.00', amountUpper:'壹拾贰万捌仟元整', payment:'分期付款（3期）', partyA:'华中科技大学', contact:'张三', phone:'138****1234', email:'zhangsan@hust.edu.cn', productName:'代谢组学全谱检测', techGoal:'对水稻叶片样本进行非靶向代谢组学全谱分析', techContent:'样本前处理、LC-MS/MS检测、数据采集', analysisContent:'代谢物定性鉴定、差异代谢物筛选、KEGG通路富集分析', amountDetails:[{name:'代谢组学全谱检测',qty:'100',unit:'个',price:'1,280.00',total:'128,000.00'}], periodDetails:[{name:'代谢组学全谱检测',qty:'100',unit:'个',cycle:'30',cycleUnit:'天'}], storage:60, terms:'1. 数据交付周期：项目完成后30个工作日内\n2. 保密条款：未经甲方许可，乙方不得将数据提供给第三方\n3. 知识产权：分析成果归甲方所有' },
+  { id:'HT2026040002', name:'2026年蛋白质组学定量分析合同', operator:'赵强', sales:'刘洋', date:'2026-04-02', status:'待确认', amount:'¥256,000.00', amountUpper:'贰拾伍万陆仟元整', payment:'分期付款（4期）', partyA:'北京大学医学部', contact:'李四', phone:'139****5678', email:'lisi@bjmu.edu.cn', productName:'蛋白质组学TMT定量分析', techGoal:'对人血清样本进行TMT标记定量蛋白质组学分析', techContent:'蛋白质提取、酶解、TMT标记、LC-MS/MS检测', analysisContent:'差异蛋白筛选、GO功能注释、KEGG通路富集、蛋白互作网络分析', amountDetails:[{name:'TMT定量蛋白质组学',qty:'50',unit:'个',price:'5,120.00',total:'256,000.00'}], periodDetails:[{name:'TMT定量蛋白质组学',qty:'50',unit:'个',cycle:'45',cycleUnit:'天'}], storage:60, terms:'1. 样本要求：血清样本需在采集后2小时内冷冻\n2. 数据分析包含差异蛋白筛选和功能富集分析\n3. 中期报告：完成50%样本后提供初步分析结果' },
+  { id:'HT2026030015', name:'2026年转录组测序分析合同', operator:'李明', sales:'陈静', date:'2026-03-15', status:'待确认', amount:'¥86,000.00', amountUpper:'捌万陆仟元整', payment:'一次性付款', partyA:'中国科学院遗传所', contact:'张三', phone:'138****1234', email:'zhangsan@genetics.ac.cn', productName:'转录组测序与差异表达分析', techGoal:'对水稻叶片进行转录组测序，鉴定差异表达基因', techContent:'RNA提取、文库构建、Illumina NovaSeq测序、数据质控', analysisContent:'差异表达基因筛选、GO富集分析、KEGG通路分析', amountDetails:[{name:'转录组测序',qty:'30',unit:'个',price:'2,200.00',total:'66,000.00'},{name:'高级生物信息分析',qty:'30',unit:'个',price:'666.67',total:'20,000.00'}], periodDetails:[{name:'转录组测序',qty:'30',unit:'个',cycle:'35',cycleUnit:'天'}], storage:60, terms:'1. 测序平台：Illumina NovaSeq\n2. 数据量：每个样本≥20M reads\n3. 分析内容：差异表达基因筛选、GO富集、KEGG通路分析' },
+  { id:'HT2026020022', name:'2026年基因组重测序合同', operator:'李明', sales:'王芳', date:'2026-02-20', status:'已签订', amount:'¥420,000.00', amountUpper:'肆拾贰万元整', payment:'分期付款（4期）', partyA:'中国科学院遗传所', contact:'张三', phone:'138****1234', email:'zhangsan@genetics.ac.cn', productName:'小麦基因组重测序', techGoal:'对小麦品种进行全基因组重测序及变异检测', techContent:'DNA提取、文库构建、Illumina NovaSeq测序', analysisContent:'SNP/InDel检测、变异注释、GWAS关联分析', amountDetails:[{name:'基因组重测序（≥15X）',qty:'20',unit:'个',price:'21,000.00',total:'420,000.00'}], periodDetails:[{name:'基因组重测序',qty:'20',unit:'个',cycle:'40',cycleUnit:'天'}], storage:60, terms:'1. 测序深度：≥15X\n2. 参考基因组：IWGSC\n3. 分析内容：SNP/InDel检测、注释和关联分析' },
+  { id:'HT2026010025', name:'2026年植物激素检测合同', operator:'李明', sales:'刘洋', date:'2026-01-20', status:'已签订', amount:'¥45,000.00', amountUpper:'肆万伍仟元整', payment:'一次性付款', partyA:'中国农业大学', contact:'郑十', phone:'132****0123', email:'zhengshi@cau.edu.cn', productName:'水稻叶片植物激素定量检测', techGoal:'对水稻叶片进行8种植物激素的定量检测', techContent:'激素提取、LC-MS/MS内标法检测', analysisContent:'激素定量分析、差异比较', amountDetails:[{name:'植物激素定量检测',qty:'200',unit:'个',price:'225.00',total:'45,000.00'}], periodDetails:[{name:'植物激素定量检测',qty:'200',unit:'个',cycle:'15',cycleUnit:'天'}], storage:36, terms:'1. 检测种类：IAA、GA、ABA、JA、SA、CK等8种\n2. 定量方法：LC-MS/MS内标法\n3. 样本要求：鲜重≥100mg，液氮速冻' },
+  { id:'HT2026040003', name:'2026年脂质组学检测服务合同', operator:'赵强', sales:'王芳', date:'2026-04-03', status:'变更中', amount:'¥96,000.00', amountUpper:'玖万陆仟元整', payment:'分期付款（2期）', partyA:'浙江大学', contact:'周八', phone:'137****9876', email:'zhouba@zju.edu.cn', productName:'脂质组学靶向检测', techGoal:'对小鼠肝脏样本进行脂质组学靶向定量分析', techContent:'脂质提取、LC-MS/MS靶向检测', analysisContent:'脂质定性定量、差异脂质筛选', amountDetails:[{name:'脂质组学靶向检测',qty:'80',unit:'个',price:'1,200.00',total:'96,000.00'}], periodDetails:[{name:'脂质组学靶向检测',qty:'80',unit:'个',cycle:'25',cycleUnit:'天'}], storage:60, terms:'1. 变更内容：检测样本数量从50个增加至80个\n2. 合同金额相应调整\n3. 其他条款不变' },
+  { id:'HT2026040004', name:'2026年广靶代谢组学分析合同', operator:'李明', sales:'陈静', date:'2026-04-05', status:'变更中', amount:'¥168,000.00', amountUpper:'壹拾陆万捌仟元整', payment:'分期付款（3期）', partyA:'南京农业大学', contact:'吴九', phone:'135****4321', email:'wujiu@njau.edu.cn', productName:'广靶代谢组学检测', techGoal:'对玉米种子进行广靶代谢组学分析', techContent:'样本前处理、LC-MS/MS广靶检测、数据采集', analysisContent:'代谢物定性鉴定、差异代谢物筛选、通路富集分析', amountDetails:[{name:'广靶代谢组学检测',qty:'120',unit:'个',price:'1,400.00',total:'168,000.00'}], periodDetails:[{name:'广靶代谢组学检测',qty:'120',unit:'个',cycle:'35',cycleUnit:'天'}], storage:60, terms:'1. 变更内容：新增VIP通路分析模块\n2. 交付周期延长10个工作日\n3. 其他条款不变' },
+];
+
+const startData = [
+  { id:1, code:'MW-2025-C-0238', contractName:'2026年蛋白质组学定量分析合同', sub:'MW-2025-S-0238-001', product:'Ultra-Fast定量蛋白组', ops:'王五', sales:'刘洋', time:'2026-04-10 14:32', status:'待确认', sampleCount:9, species:'H', tissueNote:'人MDA-MB-468细胞', expectedEnd:'2026-08-30', tech:'Ultra-Fast定量蛋白组检测', remark:'先启动蛋白产品，若实验的蛋白样本全部提取合格则直接安排后续实验无需确认；若有特殊需求请回复邮件告知',
+    samples:[
+      {seq:1,mwCode:'M26174385a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468NC1',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:2,mwCode:'M26174386a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468NC2',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:3,mwCode:'M26174387a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468NC3',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:4,mwCode:'M26174388a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468KD1',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:5,mwCode:'M26174389a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468KD2',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:6,mwCode:'M26174390a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468KD3',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:7,mwCode:'M26174391a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468OE1',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:8,mwCode:'M26174392a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468OE2',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+      {seq:9,mwCode:'M26174393a',species:'H',tissue:'人MDA-MB-468细胞',tube:'468OE3',amount:'约4.5mg',note:'两管混合为一管使用',remark:'',abnormal:''},
+    ]
+  },
+  { id:2, code:'MW-2025-C-0225', contractName:'2026年代谢组学检测服务合同', sub:'MW-2025-S-0225-002', product:'非靶向代谢组学检测', ops:'张丽', sales:'王芳', time:'2026-04-09 11:00', status:'待确认', sampleCount:6, species:'M', tissueNote:'小鼠肝脏组织', expectedEnd:'2026-07-20', tech:'LC-MS/MS非靶向检测', remark:'样本已收齐，质检合格，按计划进行。若样本表中物种与实际不符或数量少，请回复邮件告知',
+    samples:[
+      {seq:1,mwCode:'M26175001a',species:'M',tissue:'小鼠肝脏',tube:'L-NC1',amount:'约50mg',note:'',remark:'',abnormal:''},
+      {seq:2,mwCode:'M26175002a',species:'M',tissue:'小鼠肝脏',tube:'L-NC2',amount:'约50mg',note:'',remark:'',abnormal:''},
+      {seq:3,mwCode:'M26175003a',species:'M',tissue:'小鼠肝脏',tube:'L-NC3',amount:'约50mg',note:'',remark:'',abnormal:''},
+      {seq:4,mwCode:'M26175004a',species:'M',tissue:'小鼠肝脏',tube:'L-MOD1',amount:'约50mg',note:'',remark:'',abnormal:''},
+      {seq:5,mwCode:'M26175005a',species:'M',tissue:'小鼠肝脏',tube:'L-MOD2',amount:'约50mg',note:'',remark:'',abnormal:''},
+      {seq:6,mwCode:'M26175006a',species:'M',tissue:'小鼠肝脏',tube:'L-MOD3',amount:'约50mg',note:'',remark:'',abnormal:''},
+    ]
+  },
+  { id:3, code:'MW-2025-C-0210', contractName:'2026年转录组测序分析合同', sub:'MW-2025-S-0210-001', product:'全转录组测序', ops:'王五', sales:'陈静', time:'2026-04-05 09:30', status:'已确认', sampleCount:4, species:'H', tissueNote:'人肿瘤组织', expectedEnd:'2026-07-10', tech:'Illumina NovaSeq测序', remark:'—', samples:[] },
+  { id:4, code:'MW-2025-C-0200', contractName:'2026年多组学联合分析合同', sub:'MW-2025-S-0200-001', product:'DIA蛋白质组学', ops:'刘洋', sales:'王芳', time:'2026-04-01 16:00', status:'已确认', sampleCount:6, species:'H', tissueNote:'人血清', expectedEnd:'2026-08-01', tech:'DIA定量检测', remark:'—', samples:[] },
+  { id:5, code:'MW-2025-C-0195', contractName:'2026年靶向代谢组学检测合同', sub:'MW-2025-S-0195-003', product:'靶向代谢组学', ops:'张丽', sales:'刘洋', time:'2026-03-28 10:15', status:'已拒绝', rejectReason:'样本数量与合同不一致，请核实后重新发送。', sampleCount:0, species:'—', tissueNote:'—', expectedEnd:'—', tech:'LC-MRM靶向检测', remark:'—', samples:[] },
+];
+
+const formData = [
+  { id:1, code:'MW-2025-C-0238', sub:'MW-2025-S-0238-001', contractName:'2026年蛋白质组学定量分析合同', product:'Ultra-Fast定量蛋白组', name:'TMT蛋白质样本信息采集表', sales:'刘洋', ops:'王五', deadline:'2026-04-20', status:'未填写' },
+  { id:2, code:'MW-2025-C-0225', sub:'MW-2025-S-0225-002', contractName:'2026年代谢组学检测服务合同', product:'非靶向代谢组学检测', name:'代谢组样本信息采集表', sales:'王芳', ops:'张丽', deadline:'2026-04-22', status:'填写中' },
+  { id:3, code:'MW-2025-C-0210', sub:'MW-2025-S-0210-001', contractName:'2026年转录组测序分析合同', product:'全转录组测序', name:'RNA样本采集信息表', sales:'陈静', ops:'王五', deadline:'2026-04-25', status:'未填写' },
+  { id:4, code:'MW-2025-C-0200', sub:'MW-2025-S-0200-001', contractName:'2026年多组学联合分析合同', product:'DIA蛋白质组学', name:'蛋白质样本信息采集表', sales:'王芳', ops:'刘洋', deadline:'2026-04-18', status:'未填写' },
+  { id:5, code:'MW-2025-C-0195', sub:'MW-2025-S-0195-002', contractName:'2026年靶向代谢组学检测合同', product:'靶向代谢组学', name:'基因组样本信息采集表', sales:'刘洋', ops:'张丽', deadline:'2026-04-30', status:'填写中' },
+  { id:6, code:'MW-2025-C-0188', sub:'MW-2025-S-0188-001', contractName:'2026年代谢组学分析合同', product:'非靶向代谢组学', name:'代谢组样本信息采集表', sales:'赵强', ops:'张丽', deadline:'2026-03-20', status:'已完成' },
+  { id:7, code:'MW-2025-C-0180', sub:'MW-2025-S-0180-001', contractName:'2026年蛋白质组学合同', product:'TMT定量蛋白组', name:'蛋白质样本信息采集表', sales:'陈静', ops:'王五', deadline:'2026-03-10', status:'已完成' },
+];
+
+const downloadReportData = [
+  { id:1, code:'MW-2025-C-0195', sub:'MW-2025-S-0195-001', product:'DIA蛋白质组学检测', rptNo:'RPT-2026-0638', createTime:'2026-04-08 10:25', expireTime:'2026-05-08' },
+  { id:2, code:'MW-2025-C-0188', sub:'MW-2025-S-0188-001', product:'非靶向代谢组学', rptNo:'RPT-2026-0615', createTime:'2026-04-05 14:10', expireTime:'2026-05-05' },
+];
+
+const downloadRawData = [
+  { id:1, code:'MW-2025-C-0220', sub:'MW-2025-S-0220-001', product:'全外显子组测序（WES）', createTime:'2026-04-11 09:00', expireTime:'2026-05-11', files:3 },
+];
+
+// ============ STATE ============
+let userVerified = false;
+let pendingContractId = null;
+let viewUnverified = false;
+let currentRejectMode = 'contract'; // 'contract' | 'start'
+let currentRejectId = null;
+let downloadSubTab = 0;
+
+// ============ INIT ============
+function init() {
+  renderContractTable();
+  renderStartTable(0); // 默认显示待确认
+  renderFormTable(1); // pending only
+  renderDownloadTable(0);
+  updateCounts();
+}
+
+// ============ TAB SWITCH ============
+function switchTab(tab) {
+  ['contract','start','form','download'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.summary-card:not(.placeholder)').forEach(el => el.classList.remove('active'));
+  const map = {contract:0,start:1,form:2,download:3};
+  const cards = document.querySelectorAll('.summary-card:not(.placeholder)');
+  if (cards[map[tab]]) cards[map[tab]].classList.add('active');
+}
+
+function switchStartSub(idx) {
+  [0,3].forEach(i => document.getElementById('st-tab'+i).classList.toggle('active', i===idx));
+  renderStartTable(idx);
+  toast(idx===0?'显示待确认':'显示全部');
+}
+
+function switchDownloadSub(idx) {
+  downloadSubTab = idx;
+  [0,1].forEach(i => document.getElementById('dl-tab'+i).classList.toggle('active', i===idx));
+  renderDownloadTable(idx);
+}
+
+// ============ VIEW NAVIGATION ============
+function navTo(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  // Update sidebar active
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+  document.getElementById('sidebarTodo').classList.add('active');
+}
+
+// ============ RENDER TABLES ============
+function stTag(s) {
+  const m = { '待确认':'tag-red', '已确认':'tag-green', '已签订':'tag-green', '已拒绝':'tag-orange', '变更中':'tag-orange', '未填写':'tag-red', '填写中':'tag-orange', '已完成':'tag-green', '未下载':'tag-orange', '部分下载':'tag-blue', '已下载':'tag-gray' };
+  return `<span class="tag ${m[s]||'tag-gray'}">${s}</span>`;
+}
+
+function renderContractTable() {
+  const tbody = document.getElementById('contract-tbody');
+  const filteredData = contractData.filter(c => c.status === '待确认' || c.status === '变更中');
+  tbody.innerHTML = filteredData.map(c => `
+    <tr>
+      <td style="white-space:nowrap;">${c.id}</td>
+      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.name}">${c.name}</td>
+      <td>${c.sales}</td>
+      <td>${c.operator}</td>
+      <td style="white-space:nowrap;">${c.date}</td>
+      <td>${stTag(c.status)}</td>
+      <td style="white-space:nowrap;">${c.status==='待确认' || c.status==='变更中'
+        ? `<button class="btn-text btn-sm" onclick="handleGoConfirm('${c.id}')">去确认</button>`
+        : `<button class="btn-text btn-sm" onclick="openContractDetail('${c.id}', false)">查看详情</button>`
+      }</td>
+    </tr>`).join('');
+  document.getElementById('c-pgInfo').textContent = `共 ${filteredData.length} 条`;
+}
+
+function renderStartTable(mode) {
+  const tbody = document.getElementById('start-tbody');
+  const filteredData = mode === 0 ? startData.filter(d => d.status === '待确认') : startData;
+  tbody.innerHTML = filteredData.map(d => `
+    <tr>
+      <td style="white-space:nowrap;">${d.code}</td>
+      <td style="white-space:nowrap;">${d.sub}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.contractName}">${d.contractName}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.product}">${d.product}</td>
+      <td>${d.sales}</td>
+      <td>${d.ops}</td>
+      <td style="white-space:nowrap;">${d.time}</td>
+      <td>${stTag(d.status)}</td>
+      <td style="white-space:nowrap;">
+        ${d.status === '待确认'
+          ? `<button class="btn-text btn-sm" onclick="openStartDetail(${d.id})">去确认</button>`
+          : `<button class="btn-text btn-sm" onclick="openStartDetail(${d.id})">查看详情</button>`
+        }
+      </td>
+    </tr>`).join('');
+}
+
+function renderFormTable(mode) {
+  // mode 1 = pending (未完成), 0 = all
+  const tbody = document.getElementById('form-tbody');
+  const data = mode === 1 ? formData.filter(f => f.status !== '已完成') : formData;
+  tbody.innerHTML = data.map(f => `
+    <tr>
+      <td style="white-space:nowrap;">${f.code}</td>
+      <td style="white-space:nowrap;">${f.sub}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f.contractName}">${f.contractName}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f.product}">${f.product}</td>
+      <td>${f.sales}</td>
+      <td>${f.ops}</td>
+      <td>${f.deadline}</td>
+      <td>${stTag(f.status)}</td>
+      <td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('即将跳转至样本信息 — 生信采集表页面', 'info')">去填写</button></td>
+    </tr>`).join('');
+}
+
+function renderDownloadTable(subIdx) {
+  const thead = document.getElementById('dl-thead');
+  const tbody = document.getElementById('download-tbody');
+  if (subIdx === 0) {
+    // 结题报告
+    thead.innerHTML = `<tr><th style="width:175px;">合同编号</th><th style="width:190px;">子项目编号</th><th>产品名称</th><th style="width:135px;">创建时间</th><th style="width:135px;">有效时间</th><th style="width:90px;">操作</th></tr>`;
+    tbody.innerHTML = downloadReportData.map(d => `
+      <tr>
+        <td style="white-space:nowrap;">${d.code}</td>
+        <td style="white-space:nowrap;">${d.sub}</td>
+        <td>${d.product}</td>
+        <td style="white-space:nowrap;">${d.createTime}</td>
+        <td style="white-space:nowrap;">${d.expireTime}</td>
+        <td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="downloadReport('${d.rptNo}')">下载</button></td>
+      </tr>`).join('');
+    document.getElementById('dl-pg-info').textContent = `共 ${downloadReportData.length} 条`;
+  } else {
+    // 原始数据
+    thead.innerHTML = `<tr><th style="width:175px;">合同编号</th><th style="width:190px;">子项目编号</th><th>产品名称</th><th style="width:135px;">创建时间</th><th style="width:135px;">有效时间</th><th style="width:90px;">操作</th></tr>`;
+    tbody.innerHTML = downloadRawData.map(d => `
+      <tr>
+        <td style="white-space:nowrap;">${d.code}</td>
+        <td style="white-space:nowrap;">${d.sub}</td>
+        <td>${d.product}</td>
+        <td style="white-space:nowrap;">${d.createTime}</td>
+        <td style="white-space:nowrap;">${d.expireTime}</td>
+        <td style="white-space:nowrap;"><button class="btn-text btn-sm" onclick="toast('开始下载原始数据...', 'success')">下载</button></td>
+      </tr>`).join('');
+    document.getElementById('dl-pg-info').textContent = `共 ${downloadRawData.length} 条`;
+  }
+}
+
+// ============ CONTRACT CONFIRM FLOW ============
+function handleGoConfirm(id) {
+  pendingContractId = id;
+  if (!userVerified) { openModal('modal-verify'); return; }
+  openContractDetail(id, true);
+}
+
+function doVerify() {
+  closeModal('modal-verify');
+  userVerified = true;
+  toast('实名认证完成，现在可以查看并签订合同了', 'success');
+  if (pendingContractId) openContractDetail(pendingContractId, true);
+}
+
+function skipVerify() {
+  closeModal('modal-verify');
+  if (pendingContractId) { viewUnverified = true; openContractDetail(pendingContractId, true); }
+}
+
+function openContractDetail(id, showActions) {
+  const c = contractData.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('mc-title').textContent = c.status === '待确认' ? '合同确认' : '合同详情';
+  const body = document.getElementById('mc-body');
+  const footer = document.getElementById('mc-footer');
+
+  const detailRows = c.amountDetails.map(d =>
+    `<tr><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">${d.name}</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">${d.qty} ${d.unit}</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">${d.price}</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;">${d.total}</td></tr>`).join('') +
+    `<tr style="background:#fafafa;"><td colspan="3" style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:500;">总金额</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:right;font-weight:600;color:#cf1322;">${c.amount}</td></tr>`;
+
+  const periodRows = c.periodDetails.map(p =>
+    `<tr><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">${p.name}</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">${p.qty} ${p.unit}</td><td style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;">${p.cycle} ${p.cycleUnit}</td></tr>`).join('');
+
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:#e6f7ff;border:1px solid #91d5ff;border-radius: 6px;font-size:13px;margin-bottom:20px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M2 3h9l4 4v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm0 0a1 1 0 011-1h7l4 4" stroke="#004098" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>签署本合同即表示您同意 <a href="javascript:void(0)">《平台服务协议》</a> 中的相关条款。</span>
+    </div>
+    <div class="ds"><div class="ds-title">甲方信息</div><div class="desc-grid">
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">甲方单位</span><span class="desc-val">${c.partyA}</span></div><div class="desc-item"><span class="desc-lbl">联系人姓名</span><span class="desc-val">${c.contact}</span></div></div>
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">手机号码</span><span class="desc-val">${c.phone}</span></div><div class="desc-item"><span class="desc-lbl">电子邮箱</span><span class="desc-val">${c.email}</span></div></div>
+    </div></div>
+    <div class="ds"><div class="ds-title">技术服务项目</div><div class="desc-grid">
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">产品名称</span><span class="desc-val">${c.productName}</span></div></div>
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">技术目标</span><span class="desc-val">${c.techGoal}</span></div></div>
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">技术内容</span><span class="desc-val">${c.techContent}</span></div></div>
+      <div class="desc-row"><div class="desc-item"><span class="desc-lbl">分析内容</span><span class="desc-val">${c.analysisContent}</span></div></div>
+    </div></div>
+    <div class="ds"><div class="ds-title">项目金额</div>
+      <div style="margin-bottom:12px;font-size:14px;"><span style="color:rgba(0,0,0,0.45);">总金额：</span><span style="font-size:18px;font-weight:600;color:#cf1322;">${c.amount}</span><span style="margin-left:12px;color:rgba(0,0,0,0.45);font-size:13px;">（大写：${c.amountUpper}）</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#fafafa;"><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">产品名称</th><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">数量</th><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">单价（元）</th><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">总金额</th></tr></thead>
+        <tbody>${detailRows}</tbody>
+      </table>
+    </div>
+    <div class="ds"><div class="ds-title">项目周期</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#fafafa;"><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">产品名称</th><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">数量</th><th style="padding:8px 12px;border:1px solid #f0f0f0;text-align:center;font-weight:500;">周期</th></tr></thead>
+        <tbody>${periodRows}</tbody>
+      </table>
+    </div>
+    <div class="ds"><div class="ds-title">附加条款</div><div class="terms-block">${c.terms}</div></div>
+    <div class="ds"><div class="ds-title">数据存储周期</div><div class="terms-block">乙方在提供最终数据后，可以为甲方继续保留 <strong>${c.storage}</strong> 个月（其中含Lane测序项目，数据保存时间为1个月），若甲方未在届满期前10日书面提出继续保存数据，乙方将在届满期后删除。</div></div>`;
+
+  if (showActions && c.status === '待确认') {
+    if (viewUnverified) {
+      footer.innerHTML = `<button class="btn" onclick="closeModal('modal-contract')">关闭</button><button class="btn" disabled>拒绝合同</button><button class="btn btn-primary" disabled>确认合同</button>`;
+    } else {
+      footer.innerHTML = `<button class="btn" onclick="closeModal('modal-contract')">取消</button><button class="btn btn-danger" onclick="openRejectContract('${c.id}')">拒绝合同</button><button class="btn btn-primary" onclick="confirmContract('${c.id}')">确认合同</button>`;
+    }
+  } else {
+    footer.innerHTML = `<button class="btn" onclick="closeModal('modal-contract')">关闭</button>`;
+  }
+  openModal('modal-contract');
+}
+
+function confirmContract(id) {
+  const c = contractData.find(x => x.id === id);
+  if (c) c.status = '已签订';
+  closeModal('modal-contract');
+  setTimeout(() => {
+    document.getElementById('suc-title').textContent = '确认成功';
+    document.getElementById('suc-desc').textContent = '合同已确认成功，感谢您的签约！';
+    openModal('modal-success');
+    renderContractTable();
+    updateCounts();
+  }, 200);
+}
+
+function openRejectContract(id) {
+  currentRejectMode = 'contract';
+  currentRejectId = id;
+  document.getElementById('reject-title').textContent = '拒绝合同';
+  document.getElementById('reject-hint').textContent = '拒绝后，系统将通知销售人员进行修改，修改完成后将重新发送给您确认。';
+  document.getElementById('reject-reason').value = '';
+  openModal('modal-reject');
+}
+
+// ============ START CONFIRM FLOW ============
+function openStartDetail(id) {
+  const d = startData.find(x => x.id === id);
+  if (!d) return;
+  const body = document.getElementById('ms-body');
+  const footer = document.getElementById('ms-footer');
+
+  // Build sample table rows
+  const sampleRows = (d.samples && d.samples.length > 0)
+    ? d.samples.map(s => `
+        <tr>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;text-align:center;">${s.seq}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.mwCode}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.species}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.tissue}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.tube}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.amount}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.note}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.remark}</td>
+          <td style="padding:7px 10px;border:1px solid #f0f0f0;">${s.abnormal}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="9" style="padding:12px;text-align:center;color:rgba(0,0,0,0.45);border:1px solid #f0f0f0;">暂无样本明细</td></tr>`;
+
+  const sampleTable = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">
+      <thead>
+        <tr style="background:#fafafa;">
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;text-align:center;font-weight:500;white-space:nowrap;">序号</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">迈维编号</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">物种信息</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">组织部位</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">管壁标记</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">样本量</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">样本备注</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">备注</th>
+          <th style="padding:7px 10px;border:1px solid #f0f0f0;font-weight:500;white-space:nowrap;">异常备注</th>
+        </tr>
+      </thead>
+      <tbody>${sampleRows}</tbody>
+    </table>`;
+
+  body.innerHTML = `
+    <div style="padding:0 4px;font-size:14px;line-height:1.9;color:rgba(0,0,0,0.85);">
+      <p style="margin:0 0 16px;font-size:14px;">尊敬的老师，您好！</p>
+      <p style="margin:0 0 16px;">请您确认以下项目信息，如果没有问题，请您点击<strong>"确认启动"</strong>按钮；如有任何疑问，请点击<strong>"拒绝"</strong>并填写原因，系统将自动通知运营人员与您沟通。</p>
+
+      <ol style="margin:0 0 20px;padding-left:20px;display:flex;flex-direction:column;gap:14px;">
+        <li>
+          <span>本次启动产品为 <strong>${d.tech}</strong>，合同编号：<strong>${d.code}</strong>，合同名称：<strong>${d.contractName}</strong>，物种信息：<strong>${d.species}</strong>（${d.tissueNote}），共 <strong>${d.sampleCount}</strong> 个样本，预计完成时间：<strong>${d.expectedEnd}</strong>。</span>
+        </li>
+        ${d.remark && d.remark !== '—' ? `<li><span>${d.remark}</span></li>` : ''}
+        <li>
+          <span>样本明细如下表所示，请核对样本信息是否与实际一致：</span>
+          ${sampleTable}
+        </li>
+      </ol>
+
+      ${d.status === '已拒绝' && d.rejectReason ? `
+      <div style="margin-top:16px;background:#FFF1F0;border:1px solid #ffa39e;border-radius: 6px;padding:10px 14px;font-size:13px;color:#cf1322;">
+        <span style="font-weight:500;">拒绝原因：</span>${d.rejectReason}
+      </div>` : ''}
+    </div>`;
+
+  if (d.status === '待确认') {
+    footer.innerHTML = `<button class="btn" onclick="closeModal('modal-start')">关闭</button><button class="btn btn-danger" onclick="openRejectStart(${d.id})">拒绝</button><button class="btn btn-primary" onclick="confirmStart(${d.id})">确认启动</button>`;
+  } else {
+    footer.innerHTML = `<button class="btn" onclick="closeModal('modal-start')">关闭</button>`;
+  }
+  openModal('modal-start');
+}
+
+function confirmStart(id) {
+  const d = startData.find(x => x.id === id);
+  if (d) d.status = '已确认';
+  closeModal('modal-start');
+  setTimeout(() => {
+    document.getElementById('suc-title').textContent = '启动已确认';
+    document.getElementById('suc-desc').textContent = '子项目启动确认已提交，状态已同步至 LIMS 系统，感谢您的配合！';
+    openModal('modal-success');
+    renderStartTable();
+    updateCounts();
+  }, 200);
+}
+
+function openRejectStart(id) {
+  currentRejectMode = 'start';
+  currentRejectId = id;
+  document.getElementById('reject-title').textContent = '拒绝启动';
+  document.getElementById('reject-hint').textContent = '拒绝后系统将通知运营人员进行处理，请填写拒绝原因以便运营及时跟进。';
+  document.getElementById('reject-reason').value = '';
+  closeModal('modal-start');
+  setTimeout(() => openModal('modal-reject'), 200);
+}
+
+// ============ REJECT SUBMIT ============
+function submitReject() {
+  const reason = document.getElementById('reject-reason').value.trim();
+  if (!reason) {
+    document.getElementById('reject-reason').style.borderColor = '#ff4d4f';
+    document.getElementById('reject-reason').style.boxShadow = '0 0 0 2px rgba(240,56,56,0.15)';
+    toast('请填写拒绝原因', 'error');
+    return;
+  }
+  document.getElementById('reject-reason').style.borderColor = '#f0f0f0';
+  document.getElementById('reject-reason').style.boxShadow = '';
+
+  if (currentRejectMode === 'contract') {
+    const c = contractData.find(x => x.id === currentRejectId);
+    if (c) c.status = '已拒绝';
+    closeModal('modal-reject');
+    closeModal('modal-contract');
+    setTimeout(() => {
+      document.getElementById('rej-suc-title').textContent = '拒绝成功';
+      document.getElementById('rej-suc-desc').textContent = 'CRM 将收到通知，销售人员会尽快跟进处理。';
+      openModal('modal-reject-success');
+      renderContractTable();
+      updateCounts();
+    }, 200);
+  } else {
+    const d = startData.find(x => x.id === currentRejectId);
+    if (d) { d.status = '已拒绝'; d.rejectReason = reason; }
+    closeModal('modal-reject');
+    setTimeout(() => {
+      document.getElementById('rej-suc-title').textContent = '拒绝已提交';
+      document.getElementById('rej-suc-desc').textContent = '拒绝原因已同步至 LIMS，运营人员将尽快联系您处理。';
+      openModal('modal-reject-success');
+      renderStartTable();
+      updateCounts();
+    }, 200);
+  }
+}
+
+// ============ NAVIGATION ============
+
+function downloadReport(rptNo) {
+  toast(`开始下载 ${rptNo}.pdf`, 'success');
+}
+
+// ============ COUNTS ============
+function updateCounts() {
+  const pc = contractData.filter(c => c.status === '待确认' || c.status === '变更中').length;
+  const ps = startData.filter(d => d.status === '待确认').length;
+  const pf = formData.filter(f => f.status !== '已完成').length;
+  const pd = 2 + 1; // 结题报告 + 原始数据
+
+  document.getElementById('cnt-contract').textContent = pc;
+  document.getElementById('cnt-start').textContent = ps;
+  document.getElementById('cnt-form').textContent = pf;
+  document.getElementById('cnt-download').textContent = pd;
+
+  const total = pc + ps + pf + pd;
+  document.getElementById('totalPending').textContent = total;
+  document.getElementById('sidebarBadge').textContent = total;
+}
+
+// ============ MODAL HELPERS ============
+function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (!document.querySelector('.modal-mask.open')) document.body.style.overflow = '';
+  if (id === 'modal-contract') viewUnverified = false;
+}
+document.querySelectorAll('.modal-mask').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-mask.open').forEach(m => closeModal(m.id));
+});
+
+// ============ TOAST ============
+function toast(msg, type) {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' t-' + type : '');
+  const icon = type==='success'?'✓':type==='error'?'✗':type==='warn'?'⚠':'ℹ';
+  el.innerHTML = `<span style="color:${type==='success'?'#52C41A':type==='error'?'#ff4d4f':type==='warn'?'#FAAD14':'#004098'}">${icon}</span>${msg}`;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2600);
+}
+
+// ============ BOOT ============
+init();
+</script>
+</body>
+</html>
