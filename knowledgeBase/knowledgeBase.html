@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>迈维知识库</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #004098;
+      --primary-light: #e6eef8;
+      --primary-hover: #003080;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --sidebar-w: 220px;
+      --pink: #FF91DC;
+    }
+
+    body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      height: 56px; background: var(--white); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 16px; z-index: 100; flex-shrink: 0;
+    }
+    .topbar-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; color: var(--primary); min-width: var(--sidebar-w); }
+    .topbar-logo .logo-icon { width: 28px; height: 28px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .topbar-logo .logo-icon svg { width: 16px; height: 16px; fill: white; }
+    .topbar-search { flex: 1; max-width: 480px; position: relative; }
+    .topbar-search input {
+      width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px 0 36px;
+      font-size: 13px; outline: none; background: var(--bg); color: var(--text); transition: border-color 0.2s;
+    }
+    .topbar-search input:focus { border-color: var(--primary); background: white; }
+    .topbar-search .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .rag-sync-badge {
+      display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid;
+    }
+    .rag-sync-badge.synced { background: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
+    .rag-sync-badge.pending { background: #fffbeb; border-color: #fde68a; color: #d97706; }
+    .rag-sync-badge.syncing { background: var(--primary-light); border-color: #c7d2fe; color: var(--primary); }
+    .rag-sync-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .rag-sync-badge.syncing .dot { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-danger-text { background: transparent; color: var(--danger); border: none; font-size: 13px; font-weight: 500; cursor: pointer; padding: 7px 14px; border-radius: 8px; transition: all 0.15s; }
+    .btn-danger-text:hover { background: #fff0f0; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* ── MAIN LAYOUT ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 12px 0; overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar-section { padding: 0 12px 8px; }
+    .sidebar-section-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 8px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px;
+      font-size: 13px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; margin-bottom: 1px;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+    .nav-item .nav-icon { width: 16px; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--primary); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+    /* ── CONTENT ── */
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── VIEWS ── */
+    .view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .view.active { display: flex; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { padding: 20px 24px 0; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .page-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .page-header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+    /* ── STATS CARDS ── */
+    .stats-row { display: flex; gap: 16px; padding: 16px 24px; flex-shrink: 0; }
+    .stat-card {
+      flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .stat-info .stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+    .stat-info .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .stat-change { margin-left: auto; font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 20px; }
+    .stat-change.up { background: #f0fdf4; color: var(--success); }
+    .stat-change.warn { background: #fffbeb; color: var(--warning); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display: flex; align-items: center; gap: 10px; padding: 0 24px 12px; flex-shrink: 0; }
+    .filter-tabs { display: flex; gap: 2px; background: var(--bg); border-radius: 8px; padding: 3px; }
+    .filter-tab { padding: 5px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
+    .filter-tab.active { background: white; color: var(--text); font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .filter-select {
+      height: 32px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; font-size: 13px;
+      color: var(--text); background: white; cursor: pointer; outline: none;
+    }
+    .filter-bar .spacer { flex: 1; }
+
+    /* ── TABLE ── */
+    .table-wrap { flex: 1; overflow-y: auto; padding: 0 24px 24px; }
+    .kb-table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .kb-table th { background: var(--bg); padding: 10px 16px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .kb-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .kb-table tr:last-child td { border-bottom: none; }
+    .kb-table tr:hover td { background: #f5f8ff; cursor: pointer; }
+    .doc-title-cell { display: flex; align-items: center; gap: 10px; }
+    .doc-type-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .doc-type-icon.transcriptome { background: #eff6ff; }
+    .doc-type-icon.proteomics { background: #f0fdf4; }
+    .doc-type-icon.metabolomics { background: #fff7ed; }
+    .doc-type-icon.microbiome { background: #fdf4ff; }
+    .doc-type-icon.singlecell { background: #fef9c3; }
+    .doc-type-icon.multiomics { background: #f0fdfa; }
+    .doc-type-icon.cloud { background: #f0f9ff; }
+    .doc-name { font-weight: 500; color: var(--text); }
+    .doc-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .tag-transcriptome { background: #eff6ff; color: #3b82f6; }
+    .tag-proteomics { background: #f0fdf4; color: #16a34a; }
+    .tag-metabolomics { background: #fff7ed; color: #ea580c; }
+    .tag-microbiome { background: #fdf4ff; color: #9333ea; }
+    .tag-singlecell { background: #fef9c3; color: #ca8a04; }
+    .tag-multiomics { background: #f0fdfa; color: #0d9488; }
+    .tag-cloud { background: #f0f9ff; color: #0284c7; }
+    .sync-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; }
+    .sync-status .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .sync-status.synced { color: var(--success); }
+    .sync-status.synced .dot { background: var(--success); }
+    .sync-status.pending { color: var(--warning); }
+    .sync-status.pending .dot { background: var(--warning); }
+    .sync-status.draft { color: var(--text-muted); }
+    .sync-status.draft .dot { background: var(--text-muted); }
+    .action-btns { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .kb-table tr:hover .action-btns { opacity: 1; }
+    .icon-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; }
+    .icon-btn:hover { background: var(--bg); border-color: #c7d2fe; }
+    .contributor-avatars { display: flex; }
+    .contributor-avatars .avatar { width: 24px; height: 24px; font-size: 10px; border: 2px solid white; margin-left: -6px; }
+    .contributor-avatars .avatar:first-child { margin-left: 0; }
+
+    /* ── EDITOR VIEW ── */
+    .editor-layout { display: flex; flex: 1; overflow: hidden; }
+    .editor-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 24px; gap: 14px; }
+    .editor-sidebar { width: 260px; border-left: 1px solid var(--border); background: white; padding: 16px; overflow-y: auto; flex-shrink: 0; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; font-weight: 500; color: var(--text); }
+    .form-hint { font-size: 11px; color: var(--text-muted); }
+    .form-input, .form-select, .form-textarea {
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px;
+      color: var(--text); outline: none; transition: border-color 0.2s; font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .editor-toolbar {
+      display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px 8px 0 0; border-bottom: none; flex-shrink: 0;
+    }
+    .toolbar-btn { padding: 4px 8px; border-radius: 5px; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-muted); transition: all 0.15s; }
+    .toolbar-btn:hover { background: var(--border); color: var(--text); }
+    .toolbar-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+    .editor-body {
+      flex: 1; border: 1px solid var(--border); border-radius: 0 0 8px 8px; padding: 16px;
+      background: white; overflow-y: auto; outline: none; font-size: 14px; line-height: 1.7; color: var(--text);
+      min-height: 0;
+    }
+    .editor-body:focus { border-color: var(--primary); }
+    .editor-body h3 { font-size: 15px; margin: 12px 0 6px; color: var(--text); }
+    .editor-body table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .editor-body table th, .editor-body table td { border: 1px solid var(--border); padding: 7px 12px; font-size: 13px; }
+    .editor-body table th { background: var(--bg); font-weight: 600; }
+    .editor-meta-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .editor-meta-card .meta-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 10px; }
+    .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-row .meta-key { color: var(--text-muted); }
+    .meta-row .meta-val { font-weight: 500; color: var(--text); }
+    .rag-panel { margin-top: 12px; background: var(--primary-light); border: 1px solid #b3c9e6; border-radius: 10px; padding: 12px; }
+    .rag-panel .rag-title { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .rag-chunk { background: white; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-size: 11px; color: var(--text-muted); border: 1px solid #dde5ff; }
+    .rag-chunk .chunk-num { font-weight: 700; color: var(--primary); }
+    .chunk-progress { height: 4px; background: #dde5ff; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .chunk-progress-bar { height: 100%; background: var(--primary); border-radius: 2px; transition: width 0.5s; }
+    .editor-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .editor-form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* ── ACTIVITY PANEL ── */
+    .activity-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item .avatar { flex-shrink: 0; }
+    .activity-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+    .activity-text strong { font-weight: 600; }
+    .activity-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── RAG STATUS VIEW ── */
+    .rag-overview { padding: 20px 24px; flex: 1; overflow-y: auto; }
+    .rag-status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .rag-stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .rag-stat-num { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+    .rag-stat-label { font-size: 13px; color: var(--text-muted); }
+    .rag-timeline { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .rag-timeline h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+    .timeline-item { display: flex; gap: 12px; margin-bottom: 16px; }
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .timeline-dot.green { background: var(--success); }
+    .timeline-dot.blue { background: var(--primary); }
+    .timeline-dot.orange { background: var(--warning); }
+    .timeline-content .tl-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .timeline-content .tl-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .progress-bar-wrap { margin-top: 6px; }
+    .progress-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 1s; }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 16px; padding: 28px; width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+    .modal-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--bg); }
+
+    /* ── UPLOAD CENTER ── */
+    .upload-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px 24px; flex: 1; overflow: hidden; }
+    .upload-left { display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .upload-right { display: flex; flex-direction: column; gap: 0; overflow-y: auto; background: white; border: 1px solid var(--border); border-radius: 12px; }
+    .upload-right-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; color: var(--text); }
+    .upload-right-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .upload-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .upload-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+    .upload-dropzone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 28px 20px;
+      display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s;
+    }
+    .upload-dropzone:hover, .upload-dropzone.drag-over { border-color: var(--primary); background: var(--primary-light); }
+    .upload-dropzone.drag-over { transform: scale(1.01); }
+    .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+    .file-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+    .file-item .fi-icon { font-size: 20px; flex-shrink: 0; }
+    .file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-item .fi-size { color: var(--text-muted); font-size: 12px; flex-shrink: 0; }
+    .file-item .fi-remove { color: var(--text-muted); cursor: pointer; flex-shrink: 0; font-size: 14px; }
+    .file-item .fi-remove:hover { color: var(--danger); }
+    .upload-dropzone .drop-icon { width: 44px; height: 44px; background: var(--primary-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .upload-dropzone .drop-text { font-size: 13px; font-weight: 600; color: var(--primary); }
+    .upload-dropzone .drop-hint { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .upload-btn { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; flex-shrink: 0; }
+    .upload-btn:hover { background: var(--primary-hover); }
+    .upload-preview { flex: 1; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); padding: 16px; overflow-y: auto; font-size: 13px; color: var(--text-muted); line-height: 1.8; min-height: 200px; position: relative; }
+    .upload-preview.has-content { background: white; color: var(--text); }
+    .upload-preview-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); }
+    .tag-input-wrap { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; min-height: 36px; background: white; }
+    .tag-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-light); color: var(--primary); padding: 2px 8px; border-radius: 20px; font-size: 12px; }
+    .tag-chip .remove { cursor: pointer; opacity: 0.6; }
+    .tag-chip .remove:hover { opacity: 1; }
+    .tag-input-wrap input { border: none; outline: none; font-size: 12px; color: var(--text); min-width: 80px; flex: 1; background: transparent; }
+    .perm-section { display: flex; flex-direction: column; gap: 8px; }
+    .perm-title { font-size: 12px; font-weight: 600; color: var(--text); }
+    .perm-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .perm-row { display: flex; gap: 8px; align-items: flex-start; }
+    .perm-col { flex: 1; }
+    .perm-textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--text); outline: none; resize: none; line-height: 1.6; min-height: 64px; font-family: inherit; }
+    .perm-textarea:focus { border-color: var(--primary); }
+    .auto-badge { display: inline-flex; align-items: center; gap: 4px; background: #f0fdf4; color: #16a34a; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .auto-tag-label { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; background: var(--primary-light); color: var(--primary); margin-left: 4px; vertical-align: middle; }
+
+    /* ── CATEGORY MANAGEMENT ── */
+    .cat-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 20px 24px; flex: 1; overflow: auto; }
+    .cat-panel { background: white; border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    .cat-panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .cat-panel-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .cat-panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+    .cat-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 8px; font-size: 13px; color: var(--text); transition: background 0.15s; }
+    .cat-item:hover { background: var(--bg); }
+    .cat-item.active { background: var(--primary-light); color: var(--primary); }
+    .cat-item-name { flex: 1; }
+    .cat-item-count { font-size: 11px; color: var(--text-muted); margin-right: 8px; }
+    .cat-item-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .cat-item:hover .cat-item-actions { opacity: 1; }
+    .cat-action-btn { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--border); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all 0.15s; }
+    .cat-action-btn:hover { background: var(--bg); }
+    .cat-action-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+    .cat-add-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+    .cat-add-input input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
+    .cat-add-input input:focus { border-color: var(--primary); }
+    .cat-add-btn { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .cat-add-btn:hover { background: var(--primary-hover); }
+    .tag-lib-item { display: inline-flex; align-items: center; gap: 6px; background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 4px; cursor: default; }
+    .tag-lib-item .del-tag { cursor: pointer; opacity: 0.5; font-size: 11px; }
+    .tag-lib-item .del-tag:hover { opacity: 1; }
+
+    /* ── MISC ── */
+    .empty-state { text-align: center; padding: 48px 0; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+    .chip.blue { background: var(--primary-light); color: var(--primary); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 9999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+    .toast.show { display: block; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .param-table-editor { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .param-table-editor th { background: var(--bg); padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border); }
+    .param-table-editor td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .param-table-editor tr:last-child td { border-bottom: none; }
+    .param-table-editor input { width: 100%; border: none; outline: none; padding: 4px 6px; border-radius: 4px; font-size: 13px; background: transparent; }
+    .param-table-editor input:focus { background: var(--primary-light); }
+    .add-row-btn { width: 100%; padding: 7px; border: 1px dashed var(--border); border-radius: 0 0 8px 8px; background: transparent; cursor: pointer; font-size: 12px; color: var(--text-muted); transition: all 0.15s; }
+    .add-row-btn:hover { background: var(--bg); color: var(--primary); border-color: var(--primary); }
+
+    /* perm toggle show/hide */
+    .perm-sub-row { display: none; flex-direction: column; gap: 6px; }
+    .perm-sub-row.show { display: flex; }
+    /* Confirm dialog */
+    .confirm-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center; }
+    .confirm-modal.show { display: flex; }
+    .confirm-box { background: white; border-radius: 16px; padding: 28px; width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .confirm-icon { font-size: 40px; margin-bottom: 12px; text-align: center; }
+    .confirm-title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .confirm-desc { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6; margin-bottom: 24px; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+    .confirm-actions .btn { padding: 8px 24px; }
+
+    /* ── FOLDER BROWSER ── */
+    .folder-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--white); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; }
+    .folder-breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+    .breadcrumb-item { color: var(--primary); cursor: pointer; padding: 3px 6px; border-radius: 5px; }
+    .breadcrumb-item:hover { background: var(--primary-light); }
+    .breadcrumb-sep { color: var(--text-muted); font-size: 12px; }
+    .folder-toolbar-right { display: flex; align-items: center; gap: 8px; }
+    .folder-view-toggle { display: flex; gap: 2px; background: var(--bg); border-radius: 8px; padding: 3px; }
+    .view-btn { width: 28px; height: 28px; border: none; background: transparent; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+    .view-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Grid view */
+    .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .folder-card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 16px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .folder-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,64,152,0.1); transform: translateY(-2px); }
+    .folder-card.selected { border-color: var(--primary); background: var(--primary-light); }
+    .folder-card-icon { font-size: 40px; }
+    .folder-card-name { font-size: 13px; color: var(--text); text-align: center; word-break: break-all; width: 100%; }
+    .folder-card-meta { font-size: 11px; color: var(--text-muted); }
+
+    /* List view */
+    .folder-list { background: var(--white); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+    .folder-list-header { display: grid; grid-template-columns: 2fr 1fr 1fr 100px; padding: 10px 16px; background: var(--bg); font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .folder-list-item { display: grid; grid-template-columns: 2fr 1fr 1fr 100px; padding: 10px 16px; align-items: center; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; font-size: 13px; }
+    .folder-list-item:last-child { border-bottom: none; }
+    .folder-list-item:hover { background: var(--primary-light); }
+    .folder-list-item.selected { background: var(--primary-light); }
+    .folder-name-cell { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+    .folder-name-cell .item-icon { font-size: 18px; flex-shrink: 0; }
+    .folder-name-cell .item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Folder context menu */
+    .folder-context-menu { position: fixed; background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid var(--border); z-index: 1000; min-width: 160px; overflow: hidden; display: none; }
+    .folder-context-menu.show { display: block; }
+    .ctx-item { padding: 9px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text); }
+    .ctx-item:hover { background: var(--bg); }
+    .ctx-item.danger { color: var(--danger); }
+    .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* New folder modal */
+    .nf-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center; }
+    .nf-modal.show { display: flex; }
+    .nf-box { background: white; border-radius: 16px; padding: 28px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .nf-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .nf-row { margin-bottom: 12px; }
+    .nf-row label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .nf-row input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+    .nf-row input:focus { border-color: var(--primary); }
+    .nf-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" stroke="white" stroke-width="2" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    迈维知识库
+  </div>
+  <div class="topbar-search">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="搜索知识条目、分类、文档内容…" oninput="handleSearch(this.value)">
+  </div>
+  <div class="topbar-actions">
+    <div class="rag-sync-badge syncing" id="ragBadge" onclick="showView('rag')">
+      <div class="dot"></div>
+      <span id="ragBadgeText">RAG 同步中…</span>
+    </div>
+    <button class="btn btn-primary" onclick="openNewDoc()">＋ 新建条目</button>
+    <div class="avatar" style="background:#e0e7ff;color:var(--primary);" title="当前用户：张明">张</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">工作台</div>
+      <div class="nav-item active" onclick="showView('list')">
+        <span class="nav-icon">📋</span> 知识库总览
+        <span class="nav-badge">47</span>
+      </div>
+      <div class="nav-item" onclick="showView('upload')">
+        <span class="nav-icon">⬆️</span> 上传中心
+      </div>
+      <div class="nav-item" onclick="showView('folder')">
+        <span class="nav-icon">📁</span> 类目管理
+      </div>
+      <div class="nav-item" onclick="showView('category')">
+        <span class="nav-icon">🏷️</span> 标签/分类管理
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">RAG 管理</div>
+      <div class="nav-item" onclick="showView('rag')">
+        <span class="nav-icon">🤖</span> 同步状态
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">⚙️</span> 向量配置
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">团队</div>
+      <div class="nav-item" onclick="showView('member')">
+        <span class="nav-icon">👥</span> 成员管理
+      </div>
+      <div class="nav-item" onclick="showView('oplog')">
+        <span class="nav-icon">📝</span> 操作日志
+      </div>
+    </div>
+    <div style="margin-top: auto; padding: 12px 12px 4px;">
+      <div style="background: var(--primary-light); border-radius: 10px; padding: 12px; font-size: 12px; color: var(--primary);">
+        <div style="font-weight:600; margin-bottom:4px;">💡 在线协作</div>
+        <div style="color: var(--text-muted)">3 人正在编辑</div>
+        <div style="display:flex;gap:4px;margin-top:8px;">
+          <div class="avatar" style="width:24px;height:24px;font-size:10px;background:#fce7f3;color:#db2777;">李</div>
+          <div class="avatar" style="width:24px;height:24px;font-size:10px;background:#dcfce7;color:#16a34a;">王</div>
+          <div class="avatar" style="width:24px;height:24px;font-size:10px;background:#fef9c3;color:#ca8a04;">赵</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ====== LIST VIEW ====== -->
+    <div class="view active" id="view-list">
+      <div class="page-header">
+        <div>
+          <div class="page-title">知识库总览</div>
+          <div class="page-subtitle">共 47 个条目，其中 5 个待同步 RAG</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-ghost">📤 导出</button>
+          <button class="btn btn-ghost">🔄 批量同步</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eff6ff;font-size:20px;">📄</div>
+          <div class="stat-info">
+            <div class="stat-value">47</div>
+            <div class="stat-label">知识文档总量</div>
+          </div>
+          <div class="stat-change up">+5 本周</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4;font-size:20px;">🤖</div>
+          <div class="stat-info">
+            <div class="stat-value">42</div>
+            <div class="stat-label">已同步RAG</div>
+          </div>
+          <div class="stat-change up">+7 本周</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef9c3;font-size:20px;">⏳</div>
+          <div class="stat-info">
+            <div class="stat-value">5</div>
+            <div class="stat-label">待同步 RAG</div>
+          </div>
+          <div class="stat-change warn">需处理</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f5f3ff;font-size:20px;">🧩</div>
+          <div class="stat-info">
+            <div class="stat-value">284</div>
+            <div class="stat-label">已入库向量</div>
+          </div>
+          <div class="stat-change up">已同步</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="setTab(this,'全部')">全部</div>
+          <div class="filter-tab" onclick="setTab(this,'已同步')">已同步</div>
+          <div class="filter-tab" onclick="setTab(this,'待同步')">待同步</div>
+        </div>
+        <select class="filter-select" onchange="filterByCategory(this.value)">
+          <option value="">所有分类</option>
+          <option value="transcriptome">转录组</option>
+          <option value="proteomics">蛋白组</option>
+          <option value="metabolomics">代谢组</option>
+          <option value="microbiome">微生物组</option>
+          <option value="singlecell">单细胞</option>
+          <option value="multiomics">多组学</option>
+          <option value="cloud">云平台</option>
+        </select>
+        <select class="filter-select" onchange="filterByDept(this.value)">
+          <option value="">所属部门</option>
+          <option value="market">市场部</option>
+          <option value="rd">研发部</option>
+          <option value="ops">运营部</option>
+          <option value="support">技术支持</option>
+          <option value="hr">人事部</option>
+          <option value="detection">检测部</option>
+        </select>
+        <div class="spacer"></div>
+        <div style="font-size:12px;color:var(--text-muted);">排序：最近更新</div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="kb-table" id="kbTable">
+          <thead>
+            <tr>
+              <th style="width:32%">条目标题</th>
+              <th style="width:9%">格式</th>
+              <th style="width:9%">产品大类</th>
+              <th style="width:9%">二级分类</th>
+              <th style="width:10%">所属部门</th>
+              <th style="width:10%">RAG 状态</th>
+              <th style="width:13%">最后编辑</th>
+              <th style="width:9%">协作者</th>
+              <th style="width:8%"></th>
+            </tr>
+          </thead>
+          <tbody id="kbTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ====== EDITOR VIEW ====== -->
+    <div class="view" id="view-editor">
+      <div class="page-header" style="padding-bottom:16px; border-bottom:1px solid var(--border); background:white;">
+        <button class="btn btn-ghost" onclick="showView('list')" style="padding:6px 10px;">← 返回</button>
+        <div style="flex:1;margin-left:8px;">
+          <input id="editorTitle" class="form-input" style="font-size:16px;font-weight:600;border:none;padding:4px 0;width:100%;background:transparent;" value="转录组产品送样规范（2026版）" placeholder="条目标题…">
+        </div>
+        <div class="page-header-actions">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
+            <div class="avatar" style="width:22px;height:22px;font-size:10px;background:#fce7f3;color:#db2777;">李</div>
+            <span>李萌 正在查看</span>
+          </div>
+          <button class="btn-danger-text" onclick="deleteDoc()">删除</button>
+          <button class="btn btn-ghost" onclick="saveDoc()">保存</button>
+          <button class="btn btn-primary" onclick="publishDoc()">同步 RAG</button>
+        </div>
+      </div>
+
+      <div class="editor-layout">
+        <div class="editor-main">
+
+          <div class="editor-form-row3">
+            <div class="form-group">
+              <label class="form-label">一级分类</label>
+              <select class="form-select" id="docCat1" onchange="updateDocType()">
+                <option value="transcriptome">转录组</option>
+                <option value="proteomics">蛋白组</option>
+                <option value="metabolomics">代谢组</option>
+                <option value="microbiome">微生物组</option>
+                <option value="singlecell">单细胞</option>
+                <option value="multiomics">多组学</option>
+                <option value="cloud">云平台</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">二级分类</label>
+              <select class="form-select" id="docCat2">
+                <option>送样规范</option>
+                <option>分析方法</option>
+                <option>质控标准</option>
+                <option>操作 SOP</option>
+                <option>常见问题</option>
+                <option>产品说明</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">所属部门</label>
+              <select class="form-select">
+                <option>检测部</option>
+                <option>研发部</option>
+                <option>市场部</option>
+                <option>运营部</option>
+                <option>技术支持</option>
+                <option>人事部</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">文档说明</label>
+            <textarea class="form-textarea" rows="2" placeholder="简要描述文档用途、适用场景…">本规范适用于迈维云平台转录组测序项目的样本接收、质控及前处理标准，2026版更新了RNA完整性评估方式及低质量样本处理流程。</textarea>
+          </div>
+
+          <div class="form-group" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <label class="form-label">文档内容</label>
+            <div class="editor-toolbar">
+              <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
+              <button class="toolbar-btn" onclick="formatText('italic')"><i>I</i></button>
+              <div class="toolbar-sep"></div>
+              <button class="toolbar-btn" onclick="insertHeading()">H₂</button>
+              <button class="toolbar-btn">— 列表</button>
+              <button class="toolbar-btn" onclick="insertLink()">🔗 链接</button>
+              <div class="toolbar-sep"></div>
+              <button class="toolbar-btn" style="color:var(--primary);font-weight:600;" onclick="insertParamTable()">📊 插入表格</button>
+              <div style="margin-left:auto;font-size:11px;color:var(--text-muted);" id="wordCount">0 字</div>
+            </div>
+            <div class="editor-body" contenteditable="true" id="editorBody" oninput="updateWordCount()">
+              <h3>一、样本接收标准</h3>
+              <table>
+                <tr><th>样本类型</th><th>最低用量</th><th>浓度要求</th><th>体积</th></tr>
+                <tr><td>组织样本</td><td>≥ 50 mg</td><td>—</td><td>—</td></tr>
+                <tr><td>细胞样本</td><td>≥ 1×10⁶ cells</td><td>—</td><td>—</td></tr>
+                <tr><td>Total RNA</td><td>≥ 1 μg</td><td>≥ 200 ng/μL</td><td>≥ 20 μL</td></tr>
+              </table>
+              <h3>二、RNA 质控标准（2026版更新）</h3>
+              <table>
+                <tr><th>检测项目</th><th>合格标准</th><th>检测方法</th></tr>
+                <tr><td>RNA 完整性 (RIN)</td><td>≥ 7.0</td><td>Bioanalyzer / Fragment Analyzer</td></tr>
+                <tr><td>OD 260/280</td><td>1.8 ~ 2.2</td><td>NanoDrop</td></tr>
+                <tr><td>OD 260/230</td><td>≥ 1.8</td><td>NanoDrop</td></tr>
+                <tr><td>RNA 浓度</td><td>≥ 200 ng/μL</td><td>Qubit</td></tr>
+              </table>
+              <h3>三、文库构建流程</h3>
+              <p>1. mRNA 富集（Poly-A 捕获或 rRNA 去除）<br>2. RNA 片段化（95°C，8 min）<br>3. 第一链 cDNA 合成（SuperScript IV）<br>4. 第二链合成及末端修复<br>5. 接头连接 → PCR 扩增 → 文库质检</p>
+              <h3>四、低质量样本处理流程（2026新增）</h3>
+              <p>当 RIN 值 6.0–6.9 时，需填写《降级检测确认函》，经售后负责人审批后方可上机。低于 6.0 的样本原则上退回，特殊情况需报项目负责人审批。</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">标签 <span class="form-hint">（用于 RAG 检索分类，点击 ✕ 删除）</span></label>
+            <div class="tag-input-wrap" id="editorTagWrap" onclick="document.getElementById('editorTagInput').focus()">
+              <span class="tag-chip">转录组 <span class="remove" onclick="removeEditorTag(this)">✕</span></span>
+              <span class="tag-chip">送样规范 <span class="remove" onclick="removeEditorTag(this)">✕</span></span>
+              <span class="tag-chip">RNA 质控 <span class="remove" onclick="removeEditorTag(this)">✕</span></span>
+              <input id="editorTagInput" placeholder="输入标签后回车添加…" style="border:none;outline:none;font-size:12px;color:var(--text);min-width:130px;flex:1;background:transparent;" onkeydown="addEditorTag(event)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor Sidebar -->
+        <div class="editor-sidebar">
+          <div class="editor-meta-card">
+            <div class="meta-title">文档信息</div>
+            <div class="meta-row"><span class="meta-key">状态</span><span class="sync-status pending"><div class="dot"></div>待同步</span></div>
+            <div class="meta-row"><span class="meta-key">创建者</span><span class="meta-val">张明</span></div>
+            <div class="meta-row"><span class="meta-key">最后编辑</span><span class="meta-val">刚刚</span></div>
+            <div class="meta-row"><span class="meta-key">版本</span><span class="meta-val">v2.0</span></div>
+            <div class="meta-row"><span class="meta-key">字数</span><span class="meta-val" id="sidebarWordCount">约 320 字</span></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="meta-title" style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">协作历史</div>
+            <div class="activity-item">
+              <div class="avatar" style="width:28px;height:28px;font-size:11px;background:#e0e7ff;color:var(--primary);">张</div>
+              <div>
+                <div class="activity-text"><strong>张明</strong> 更新了 RNA 质控标准</div>
+                <div class="activity-time">20 分钟前</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="avatar" style="width:28px;height:28px;font-size:11px;background:#fce7f3;color:#db2777;">李</div>
+              <div>
+                <div class="activity-text"><strong>李萌</strong> 补充了低质量样本流程</div>
+                <div class="activity-time">1 小时前</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="avatar" style="width:28px;height:28px;font-size:11px;background:#dcfce7;color:#16a34a;">王</div>
+              <div>
+                <div class="activity-text"><strong>王强</strong> 创建了此文档</div>
+                <div class="activity-time">昨天</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== RAG STATUS VIEW ====== -->
+    <div class="view" id="view-rag">
+      <div class="page-header">
+        <div>
+          <div class="page-title">RAG 同步状态</div>
+          <div class="page-subtitle">知识库向量数据库同步管理</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-ghost">⚙️ 同步配置</button>
+          <button class="btn btn-primary" onclick="triggerSync()">🔄 立即全量同步</button>
+        </div>
+      </div>
+      <div class="rag-overview">
+        <div class="rag-status-grid">
+          <div class="rag-stat-card">
+            <div class="rag-stat-num" style="color:var(--success)">42</div>
+            <div class="rag-stat-label">✅ 已同步</div>
+          </div>
+          <div class="rag-stat-card">
+            <div class="rag-stat-num" style="color:var(--warning)">5</div>
+            <div class="rag-stat-label">⏳ 待同步</div>
+          </div>
+          <div class="rag-stat-card">
+            <div class="rag-stat-num" style="color:var(--primary)">284</div>
+            <div class="rag-stat-label">🧩 向量 Chunks</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="rag-timeline">
+            <h3>同步队列</h3>
+            <div class="timeline-item">
+              <div class="timeline-dot blue"></div>
+              <div class="timeline-content">
+                <div class="tl-title">转录组产品送样规范（2026版）</div>
+                <div class="tl-desc">正在向量化… 3 chunks</div>
+                <div class="progress-bar-wrap"><div class="progress-bar"><div class="chunk-progress-bar" id="syncBar1" style="width:60%;background:var(--primary)"></div></div></div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot orange"></div>
+              <div class="timeline-content">
+                <div class="tl-title">差异分析方法说明与适用场景</div>
+                <div class="tl-desc">等待中</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot orange"></div>
+              <div class="timeline-content">
+                <div class="tl-title">代谢组Q-TOF上机操作SOP</div>
+                <div class="tl-desc">等待中</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot green"></div>
+              <div class="timeline-content">
+                <div class="tl-title">蛋白组定性定量分析流程</div>
+                <div class="tl-desc">✅ 同步完成 — 5 mins ago</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot green"></div>
+              <div class="timeline-content">
+                <div class="tl-title">云平台常见问题与排查清单</div>
+                <div class="tl-desc">✅ 同步完成 — 12 mins ago</div>
+              </div>
+            </div>
+          </div>
+          <div class="rag-timeline">
+            <h3>向量库配置</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="meta-row" style="padding:10px 0;"><span class="meta-key">向量数据库</span><span class="meta-val">Qdrant v1.8</span></div>
+              <div class="meta-row" style="padding:10px 0;"><span class="meta-key">Embedding 模型</span><span class="meta-val">text-embedding-3-large</span></div>
+              <div class="meta-row" style="padding:10px 0;"><span class="meta-key">切分策略</span><span class="meta-val">按段落 + 500 tokens</span></div>
+              <div class="meta-row" style="padding:10px 0;"><span class="meta-key">Collection</span><span class="meta-val">maiwei_knowledge_v2</span></div>
+              <div class="meta-row" style="padding:10px 0;">
+                <span class="meta-key">自动同步</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div onclick="toggleAutoSync(this)" style="width:36px;height:20px;background:var(--primary);border-radius:10px;cursor:pointer;position:relative;transition:background 0.2s;" id="autoSyncToggle">
+                    <div style="width:16px;height:16px;background:white;border-radius:50%;position:absolute;top:2px;right:2px;transition:right 0.2s;"></div>
+                  </div>
+                  <span style="font-size:12px;color:var(--success);font-weight:500;">已开启</span>
+                </div>
+              </div>
+              <div class="meta-row" style="padding:10px 0;border-bottom:none;"><span class="meta-key">触发方式</span><span class="meta-val">发布时自动 + 定时每小时</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== UPLOAD CENTER VIEW ====== -->
+    <div class="view" id="view-upload">
+      <div class="page-header" style="padding-bottom:12px;">
+        <div>
+          <div class="page-title">上传中心</div>
+          <div class="page-subtitle">上传文档后可预览内容并完成配置，一键同步至 RAG</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-ghost" onclick="saveDoc()">保存</button>
+          <button class="btn btn-primary" onclick="publishDoc()">同步 RAG</button>
+        </div>
+      </div>
+
+      <div class="upload-layout" style="padding:12px 24px 20px;">
+        <!-- Left: upload + preview -->
+        <div class="upload-left">
+          <!-- Upload zone -->
+          <div class="upload-card">
+            <div class="upload-card-title">文件上传</div>
+            <div class="upload-dropzone" id="uploadDropzone"
+              ondragover="event.preventDefault(); this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="handleFileDrop(event)"
+              onclick="triggerUpload()">
+              <div class="drop-icon">📁</div>
+              <div>
+                <div class="drop-text">拖拽文件或文件夹到此处上传</div>
+                <div class="drop-hint">支持 Word、TXT、Excel、Markdown、PDF、PPT 及文件夹，可多选</div>
+              </div>
+              <button class="upload-btn" onclick="event.stopPropagation();triggerUpload()">选择文件</button>
+            </div>
+            <input type="file" id="fileInput" style="display:none;" multiple webkitdirectory accept=".doc,.docx,.txt,.xlsx,.xls,.md,.pdf,.pptx,.ppt" onchange="handleFileSelect(this)">
+            <!-- File list -->
+            <div class="file-list" id="fileList"></div>
+          </div>
+
+          <!-- Preview -->
+          <div class="upload-card" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="upload-card-title" style="margin-bottom:0;">文件预览</div>
+              <div id="previewFileName" style="font-size:12px;color:var(--text-muted);"></div>
+            </div>
+            <div class="upload-preview" id="uploadPreview" style="flex:1;">
+              <div class="upload-preview-placeholder">
+                <div style="font-size:36px;">📋</div>
+                <div style="font-size:13px;font-weight:500;">上传文件后，可在这里直接预览文件内容</div>
+                <div style="font-size:12px;">再继续完成右方配置</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: config -->
+        <div class="upload-right">
+          <div class="upload-right-header">文件配置</div>
+          <div class="upload-right-body">
+
+            <!-- 一级分类 + 二级分类 -->
+            <div class="editor-form-row">
+              <div class="form-group">
+                <label class="form-label">一级分类</label>
+                <select class="form-select" id="uploadCat1" onchange="updateUploadCat2()">
+                  <option value="">请选择</option>
+                  <option value="transcriptome">转录组</option>
+                  <option value="proteomics">蛋白组</option>
+                  <option value="metabolomics">代谢组</option>
+                  <option value="microbiome">微生物组</option>
+                  <option value="singlecell">单细胞</option>
+                  <option value="multiomics">多组学</option>
+                  <option value="cloud">云平台</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">二级分类</label>
+                <select class="form-select" id="uploadCat2">
+                  <option value="">请先选一级</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 标签 -->
+            <div class="form-group">
+              <label class="form-label">添加标签</label>
+              <div class="tag-input-wrap" id="tagInputWrap" onclick="document.getElementById('tagInput').focus()">
+                <span class="tag-chip">转录组 <span class="remove" onclick="removeTag(this)">✕</span></span>
+                <input id="tagInput" placeholder="输入标签后回车添加…" onkeydown="addTag(event)">
+              </div>
+            </div>
+
+            <!-- 部门 + 格式（下拉，默认自动填充） -->
+            <div class="editor-form-row">
+              <div class="form-group">
+                <label class="form-label">所属部门 <span class="auto-tag-label">自动</span></label>
+                <select class="form-select" id="uploadDeptSelect">
+                  <option value="">— 自动匹配 —</option>
+                  <option value="检测部">检测部</option>
+                  <option value="研发部">研发部</option>
+                  <option value="市场部">市场部</option>
+                  <option value="运营部">运营部</option>
+                  <option value="技术支持">技术支持</option>
+                  <option value="人事部">人事部</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">文件格式 <span class="auto-tag-label">自动</span></label>
+                <select class="form-select" id="uploadFormatSelect">
+                  <option value="">— 自动识别 —</option>
+                  <option value="PDF">PDF</option>
+                  <option value="Word">Word</option>
+                  <option value="Excel">Excel</option>
+                  <option value="Markdown">Markdown</option>
+                  <option value="TXT">TXT</option>
+                  <option value="PPT">PPT</option>
+                  <option value="图片">图片</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 查看权限 -->
+            <div class="perm-section">
+              <div class="perm-title">查看权限</div>
+              <select class="form-select" id="viewPermSelect" onchange="onViewPermChange()">
+                <option value="all">全部可见</option>
+                <option value="partial">部分可见</option>
+              </select>
+              <div class="perm-sub-row" id="viewPermSub">
+                <select class="form-select" id="viewPermType" onchange="onViewPermTypeChange('view')">
+                  <option value="dept">指定部门</option>
+                  <option value="person">指定人员</option>
+                </select>
+                <textarea class="perm-textarea" id="viewPermInput" placeholder="输入部门名称或人员姓名，多个以逗号分隔"></textarea>
+              </div>
+            </div>
+
+            <!-- 编辑权限 -->
+            <div class="perm-section">
+              <div class="perm-title">编辑权限</div>
+              <select class="form-select" id="editPermSelect" onchange="onEditPermChange()">
+                <option value="all">全部可编辑</option>
+                <option value="partial">部分可编辑</option>
+              </select>
+              <div class="perm-sub-row" id="editPermSub">
+                <select class="form-select" id="editPermType" onchange="onViewPermTypeChange('edit')">
+                  <option value="dept">指定部门</option>
+                  <option value="person">指定人员</option>
+                </select>
+                <textarea class="perm-textarea" id="editPermInput" placeholder="输入部门名称或人员姓名，多个以逗号分隔"></textarea>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FOLDER BROWSER VIEW ====== -->
+    <div class="view" id="view-folder">
+      <div class="page-header" style="padding-bottom:12px;">
+        <div>
+          <div class="page-title">类目管理</div>
+          <div class="page-subtitle">像管理文件夹一样，按类目整理你的文档内容</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-ghost" onclick="folderNewFolder()">📁 新建文件夹</button>
+          <button class="btn btn-primary" onclick="folderUpload()">⬆️ 上传文件</button>
+        </div>
+      </div>
+      <div class="folder-container" style="padding:12px 24px 20px;">
+
+        <!-- Toolbar -->
+        <div class="folder-toolbar">
+          <div class="folder-breadcrumb" id="folderBreadcrumb">
+            <span class="breadcrumb-item" onclick="folderNavigate('')">📂 全部文件</span>
+          </div>
+          <div class="folder-toolbar-right">
+            <div class="folder-view-toggle">
+              <button class="view-btn active" onclick="setFolderView('grid')" title="网格视图">▦</button>
+              <button class="view-btn" onclick="setFolderView('list')" title="列表视图">☰</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Folder grid/list -->
+        <div class="folder-body" id="folderBody"></div>
+      </div>
+    </div>
+
+    <!-- ====== CATEGORY MANAGEMENT VIEW ====== -->
+    <div class="view" id="view-category">
+      <div class="page-header" style="padding-bottom:12px;">
+        <div>
+          <div class="page-title">标签 / 分类管理</div>
+          <div class="page-subtitle">管理知识库的一级分类、二级分类及标签预设库</div>
+        </div>
+      </div>
+
+      <div class="cat-layout" style="padding:12px 24px 20px;">
+        <!-- 一级分类 -->
+        <div class="cat-panel">
+          <div class="cat-panel-header">
+            <div class="cat-panel-title">📂 一级分类</div>
+            <span style="font-size:12px;color:var(--text-muted);">共 <span id="cat1Count">7</span> 项</span>
+          </div>
+          <div class="cat-panel-body" id="cat1List"></div>
+          <div class="cat-add-input">
+            <input type="text" id="cat1Input" placeholder="新建一级分类名称…" onkeydown="if(event.key==='Enter')addCat1()">
+            <button class="cat-add-btn" onclick="addCat1()">添加</button>
+          </div>
+        </div>
+
+        <!-- 二级分类 -->
+        <div class="cat-panel">
+          <div class="cat-panel-header">
+            <div class="cat-panel-title">📁 二级分类</div>
+            <span style="font-size:12px;color:var(--text-muted);">共 <span id="cat2Count">6</span> 项</span>
+          </div>
+          <div class="cat-panel-body" id="cat2List"></div>
+          <div class="cat-add-input">
+            <input type="text" id="cat2Input" placeholder="新建二级分类名称…" onkeydown="if(event.key==='Enter')addCat2()">
+            <button class="cat-add-btn" onclick="addCat2()">添加</button>
+          </div>
+        </div>
+
+        <!-- 标签库 -->
+        <div class="cat-panel">
+          <div class="cat-panel-header">
+            <div class="cat-panel-title">🏷️ 标签预设库</div>
+            <span style="font-size:12px;color:var(--text-muted);">共 <span id="tagLibCount">12</span> 个</span>
+          </div>
+          <div class="cat-panel-body" id="tagLibList" style="padding:12px 8px;"></div>
+          <div class="cat-add-input">
+            <input type="text" id="tagLibInput" placeholder="新建标签…" onkeydown="if(event.key==='Enter')addTagLib()">
+            <button class="cat-add-btn" onclick="addTagLib()">添加</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ====== MEMBER MANAGEMENT VIEW (overlay) ====== -->
+<div id="view-member" style="display:none;position:fixed;top:56px;left:220px;right:0;bottom:0;background:var(--bg);flex-direction:column;z-index:50;">
+  <div style="padding:20px 24px 0;display:flex;align-items:center;gap:12px;flex-shrink:0;background:white;border-bottom:1px solid var(--border);padding-bottom:16px;">
+    <div>
+      <div class="page-title">成员管理</div>
+      <div class="page-subtitle">管理团队用户组与成员，设置角色权限</div>
+    </div>
+    <div class="page-header-actions" style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="showAddGroupModal()">添加至用户组</button>
+      <button class="btn btn-ghost" onclick="showToast('批量修改角色功能即将上线')">批量修改团队角色</button>
+      <button class="btn btn-primary" onclick="showInviteModal()">邀请成员</button>
+    </div>
+  </div>
+  <div style="display:flex;flex:1;overflow:hidden;">
+    <!-- 左侧用户组 -->
+    <div style="width:200px;border-right:1px solid var(--border);background:white;padding:12px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;overflow-y:auto;">
+      <button class="btn btn-ghost" style="margin-bottom:8px;justify-content:center;border-style:dashed;" onclick="showAddGroupModal()">＋ 新建用户组</button>
+      <div id="groupTabList"></div>
+    </div>
+    <!-- 右侧成员列表 -->
+    <div style="flex:1;overflow-y:auto;padding:0 24px 24px;">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;">
+        <div style="font-size:14px;font-weight:600;color:var(--text);" id="currentGroupLabel">当前视图：全部成员</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+          <div style="position:relative;">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">🔍</span>
+            <input style="height:34px;border:1px solid var(--border);border-radius:8px;padding:0 12px 0 32px;font-size:13px;outline:none;width:180px;" placeholder="搜索成员" oninput="filterMembers(this.value)">
+          </div>
+          <button class="btn btn-ghost" style="padding:6px 12px;">筛选</button>
+        </div>
+      </div>
+      <table class="kb-table" style="width:100%;">
+        <thead>
+          <tr>
+            <th style="width:4%;"><input type="checkbox" onchange="toggleAllMembers(this)"></th>
+            <th style="width:28%;">姓名</th>
+            <th style="width:18%;">所属用户组</th>
+            <th style="width:15%;">最后操作时间</th>
+            <th style="width:12%;">角色 <span style="font-size:11px;color:var(--text-muted);">ℹ</span></th>
+            <th style="width:10%;">邀请人</th>
+            <th style="width:13%;">激活状态</th>
+          </tr>
+        </thead>
+        <tbody id="memberTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====== OPERATION LOG VIEW (overlay) ====== -->
+<div id="view-oplog" style="display:none;position:fixed;top:56px;left:220px;right:0;bottom:0;background:var(--bg);flex-direction:column;z-index:50;">
+  <div style="padding:20px 24px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;background:white;border-bottom:1px solid var(--border);">
+    <div>
+      <div class="page-title">操作日志</div>
+      <div class="page-subtitle">记录团队所有成员的文档操作行为</div>
+    </div>
+    <div class="page-header-actions" style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost">📤 导出日志</button>
+      <select class="filter-select" id="logActionFilter" onchange="filterLogs()" style="height:34px;">
+        <option value="">全部操作</option>
+        <option value="上传">上传文档</option>
+        <option value="删除">删除文档</option>
+        <option value="编辑">编辑文档</option>
+        <option value="同步">同步 RAG</option>
+        <option value="下载">下载文档</option>
+      </select>
+      <select class="filter-select" id="logUserFilter" onchange="filterLogs()" style="height:34px;">
+        <option value="">全部成员</option>
+        <option>张明</option>
+        <option>李萌</option>
+        <option>王强</option>
+        <option>赵丽</option>
+        <option>程细辉</option>
+      </select>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 24px 24px;">
+    <table class="kb-table" style="width:100%;">
+      <thead>
+        <tr>
+          <th style="width:16%;">操作时间</th>
+          <th style="width:14%;">操作人员</th>
+          <th style="width:10%;">操作类型</th>
+          <th style="width:40%;">操作内容</th>
+          <th style="width:20%;">关联文档</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INVITE MEMBER MODAL -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal" style="width:440px;">
+    <div class="modal-title">邀请成员</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label class="form-label">手机号 / 邮箱</label>
+        <input class="form-input" id="inviteContact" placeholder="输入手机号或邮箱地址">
+      </div>
+      <div class="form-group">
+        <label class="form-label">加入用户组</label>
+        <select class="form-select" id="inviteGroup">
+          <option value="">不加入（未分组）</option>
+          <option>迈维云平台</option>
+          <option>检测部</option>
+          <option>研发部</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">角色</label>
+        <select class="form-select" id="inviteRole">
+          <option>团队成员</option>
+          <option>管理员</option>
+          <option>超级管理员</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('inviteModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="doInvite()">发送邀请</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD GROUP MODAL -->
+<div class="modal-overlay" id="addGroupModal">
+  <div class="modal" style="width:380px;">
+    <div class="modal-title">新建用户组</div>
+    <div class="form-group">
+      <label class="form-label">用户组名称</label>
+      <input class="form-input" id="newGroupName" placeholder="例：检测部、云平台团队…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('addGroupModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="doAddGroup()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW DOC MODAL -->
+<div class="modal-overlay" id="newDocModal">
+  <div class="modal">
+    <div class="modal-title">新建知识条目</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label class="form-label">条目标题</label>
+        <input class="form-input" placeholder="例：转录组差异分析结果解读">
+      </div>
+      <div class="form-group">
+        <label class="form-label">一级分类</label>
+        <select class="form-select">
+          <option>转录组</option><option>蛋白组</option><option>代谢组</option>
+          <option>微生物组</option><option>单细胞</option><option>多组学</option><option>云平台</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属部门</label>
+        <select class="form-select">
+          <option>检测部</option><option>研发部</option><option>市场部</option>
+          <option>运营部</option><option>技术支持</option><option>人事部</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="createDoc()">创建并开始编辑</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">确认删除？</div>
+    <div class="confirm-desc" id="confirmDesc">此操作不可撤销，请确认。</div>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-danger-text" onclick="doConfirm()" style="background:var(--danger);color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLDER CONTEXT MENU -->
+<div class="folder-context-menu" id="folderCtxMenu">
+  <div class="ctx-item" onclick="folderOpenItem()">📂 打开</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="folderRenameItem()">✏️ 重命名</div>
+  <div class="ctx-item" onclick="folderMoveItem()">📋 移动到…</div>
+  <div class="ctx-item" onclick="folderCopyLink()">🔗 复制链接</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="folderDeleteItem()">🗑️ 删除</div>
+</div>
+
+<script>
+// ── DATA ──
+const cat1Data = [
+  {id:'transcriptome', name:'转录组', count:12},
+  {id:'proteomics', name:'蛋白组', count:8},
+  {id:'metabolomics', name:'代谢组', count:7},
+  {id:'microbiome', name:'微生物组', count:6},
+  {id:'singlecell', name:'单细胞', count:5},
+  {id:'multiomics', name:'多组学', count:5},
+  {id:'cloud', name:'云平台', count:4},
+];
+
+const cat2Data = [
+  {id:'sample', cat1Id:'transcriptome', name:'送样规范', count:3},
+  {id:'analysis', cat1Id:'transcriptome', name:'差异分析', count:2},
+  {id:'kegg_go', cat1Id:'transcriptome', name:'KEGG/GO富集', count:2},
+  {id:'lib_build', cat1Id:'transcriptome', name:'文库构建', count:1},
+  {id:'proteomics_q', cat1Id:'proteomics', name:'蛋白定量', count:2},
+  {id:'proteomics_m', cat1Id:'proteomics', name:'质谱分析', count:2},
+  {id:'proteomics_f', cat1Id:'proteomics', name:'蛋白功能注释', count:1},
+  {id:'metabolomics_i', cat1Id:'metabolomics', name:'代谢物鉴定', count:2},
+  {id:'metabolomics_q', cat1Id:'metabolomics', name:'Q-TOF操作', count:1},
+  {id:'metabolomics_p', cat1Id:'metabolomics', name:'代谢通路', count:1},
+  {id:'microbiome_16s', cat1Id:'microbiome', name:'16S测序', count:2},
+  {id:'microbiome_mg', cat1Id:'microbiome', name:'宏基因组', count:1},
+  {id:'singlecell_c', cat1Id:'singlecell', name:'细胞聚类', count:1},
+  {id:'singlecell_u', cat1Id:'singlecell', name:'UMAP分析', count:1},
+  {id:'multiomics_j', cat1Id:'multiomics', name:'联合分析', count:1},
+  {id:'cloud_faq', cat1Id:'cloud', name:'常见问题', count:2},
+  {id:'cloud_op', cat1Id:'cloud', name:'平台操作', count:1},
+];
+
+const tagLibData = [
+  'RNA质控','样本送检','差异分析','DESeq2','KEGG','GO富集','蛋白定量',
+  '代谢物鉴定','16S测序','细胞聚类','UMAP','质谱','云平台','FAQ'
+];
+
+const cat1Labels = {
+  transcriptome:'转录组', proteomics:'蛋白组', metabolomics:'代谢组',
+  microbiome:'微生物组', singlecell:'单细胞', multiomics:'多组学', cloud:'云平台'
+};
+const cat2Sub = {
+  transcriptome:['送样规范','差异分析','KEGG/GO富集','文库构建','测序报告'],
+  proteomics:['蛋白定量','质谱分析','蛋白功能注释','修饰组学'],
+  metabolomics:['代谢物鉴定','Q-TOF操作','代谢通路','非靶向代谢'],
+  microbiome:['16S测序','宏基因组','物种多样性','功能注释'],
+  singlecell:['细胞聚类','UMAP分析','拟时序','细胞通讯'],
+  multiomics:['联合分析','数据整合','相关性分析'],
+  cloud:['平台操作','常见问题','账号管理','数据上传'],
+};
+const deptMap = {
+  transcriptome:'检测部', proteomics:'检测部', metabolomics:'检测部',
+  microbiome:'检测部', singlecell:'研发部', multiomics:'研发部', cloud:'技术支持'
+};
+const formatIcons = { pdf:'📕 PDF', doc:'📘 Word', docx:'📘 Word', xlsx:'📗 Excel', xls:'📗 Excel', md:'📝 Markdown', txt:'📄 TXT', pptx:'📙 PPT', png:'🖼️ 图片', jpg:'🖼️ 图片' };
+const typeIconMap = {
+  transcriptome:'🔬', proteomics:'🧬', metabolomics:'⚗️',
+  microbiome:'🦠', singlecell:'🔵', multiomics:'🔗', cloud:'☁️'
+};
+
+const kbData = [
+  { id:1, title:'转录组产品送样规范（2026版）', cat1:'transcriptome', cat2:'送样规范', dept:'检测部', format:'pdf', sync:'syncing', editor:'张明', time:'刚刚', contributors:['张','李','王'], tags:['转录组','送样规范'] },
+  { id:2, title:'差异分析方法说明与适用场景', cat1:'transcriptome', cat2:'差异分析', dept:'研发部', format:'docx', sync:'pending', editor:'李萌', time:'10分钟前', contributors:['李','王'], tags:['差异分析','DESeq2'] },
+  { id:3, title:'云平台常见问题与排查清单', cat1:'cloud', cat2:'常见问题', dept:'技术支持', format:'md', sync:'pending', editor:'王强', time:'1小时前', contributors:['王'], tags:['云平台','FAQ'] },
+  { id:4, title:'蛋白组定性定量分析流程', cat1:'proteomics', cat2:'蛋白定量', dept:'检测部', format:'pdf', sync:'synced', editor:'赵丽', time:'3小时前', contributors:['赵','张'], tags:['蛋白组','质谱'] },
+  { id:5, title:'代谢组 Q-TOF 上机操作 SOP', cat1:'metabolomics', cat2:'操作SOP', dept:'检测部', format:'docx', sync:'synced', editor:'张明', time:'昨天', contributors:['张'], tags:['代谢组','SOP'] },
+  { id:6, title:'微生物组 16S 测序质控标准', cat1:'microbiome', cat2:'质控标准', dept:'检测部', format:'pdf', sync:'synced', editor:'李萌', time:'昨天', contributors:['李','赵'], tags:['微生物组','16S'] },
+  { id:7, title:'单细胞转录组 UMAP 聚类分析说明', cat1:'singlecell', cat2:'UMAP分析', dept:'研发部', format:'md', sync:'synced', editor:'王强', time:'2天前', contributors:['王'], tags:['单细胞','UMAP'] },
+  { id:8, title:'多组学联合分析数据整合规范', cat1:'multiomics', cat2:'数据整合', dept:'研发部', format:'xlsx', sync:'synced', editor:'赵丽', time:'2天前', contributors:['赵','李','张'], tags:['多组学','整合'] },
+  { id:9, title:'蛋白修饰组学样本处理指引', cat1:'proteomics', cat2:'修饰组学', dept:'检测部', format:'pdf', sync:'pending', editor:'张明', time:'3天前', contributors:['张'], tags:['蛋白组','修饰'] },
+  { id:10, title:'云平台账号权限管理手册', cat1:'cloud', cat2:'账号管理', dept:'技术支持', format:'docx', sync:'synced', editor:'李萌', time:'3天前', contributors:['李','王','赵'], tags:['云平台','权限'] },
+  { id:11, title:'转录组 KEGG/GO 富集分析指南', cat1:'transcriptome', cat2:'KEGG/GO富集', dept:'研发部', format:'pdf', sync:'synced', editor:'王强', time:'4天前', contributors:['王','张'], tags:['转录组','KEGG'] },
+  { id:12, title:'代谢物鉴定与代谢通路解析', cat1:'metabolomics', cat2:'代谢通路', dept:'检测部', format:'pdf', sync:'pending', editor:'赵丽', time:'5天前', contributors:['赵'], tags:['代谢组','通路'] },
+];
+
+const avatarColors = {
+  '张':['#e0e7ff','var(--primary)'], '李':['#fce7f3','#db2777'],
+  '王':['#dcfce7','#16a34a'], '赵':['#fef9c3','#ca8a04']
+};
+
+const formatBadge = {
+  pdf: {bg:'#fee2e2',color:'#dc2626',label:'PDF'},
+  docx: {bg:'#dbeafe',color:'#2563eb',label:'Word'},
+  doc: {bg:'#dbeafe',color:'#2563eb',label:'Word'},
+  xlsx: {bg:'#dcfce7',color:'#16a34a',label:'Excel'},
+  xls: {bg:'#dcfce7',color:'#16a34a',label:'Excel'},
+  md: {bg:'#f3e8ff',color:'#9333ea',label:'Markdown'},
+  txt: {bg:'#f1f5f9',color:'#475569',label:'TXT'},
+  pptx: {bg:'#ffedd5',color:'#ea580c',label:'PPT'},
+  png: {bg:'#fef9c3',color:'#ca8a04',label:'图片'},
+  jpg: {bg:'#fef9c3',color:'#ca8a04',label:'图片'},
+};
+
+const syncConfig = {
+  synced: { cls:'synced', label:'已同步' },
+  pending: { cls:'pending', label:'待同步' },
+  syncing: { cls:'', label:'同步中…' },
+};
+
+// ── RENDER TABLE ──
+function renderTable(data) {
+  const tbody = document.getElementById('kbTableBody');
+  tbody.innerHTML = data.map(row => {
+    const sc = row.sync === 'syncing' ? {cls:'',label:'同步中…'} : syncConfig[row.sync] || {cls:'draft',label:'草稿'};
+    const avatars = row.contributors.slice(0,3).map(n => {
+      const [bg,color] = avatarColors[n]||['#e2e8f0','#64748b'];
+      return `<div class="avatar" style="width:24px;height:24px;font-size:10px;background:${bg};color:${color};">${n}</div>`;
+    }).join('');
+    const fmt = formatBadge[row.format] || {bg:'#f1f5f9',color:'#475569',label:row.format.toUpperCase()};
+    const icon = typeIconMap[row.cat1] || '📄';
+    const cat1Label = cat1Labels[row.cat1] || row.cat1;
+    return `<tr onclick="openEditor(${row.id})">
+      <td>
+        <div class="doc-title-cell">
+          <div class="doc-type-icon ${row.cat1}" style="background:${fmt.bg};">${icon}</div>
+          <div>
+            <div class="doc-name">${row.title}</div>
+            <div class="doc-meta">${row.tags.map(t=>`#${t}`).join(' ')}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="tag" style="background:${fmt.bg};color:${fmt.color};">${fmt.label}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${cat1Label}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${row.cat2 || '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${row.dept}</td>
+      <td>
+        <div class="sync-status ${sc.cls}">
+          <div class="dot" ${row.sync==='syncing'?'style="animation:pulse 1s infinite"':''}></div>
+          ${sc.label}
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text-muted)">${row.editor} · ${row.time}</td>
+      <td><div class="contributor-avatars">${avatars}</div></td>
+      <td>
+        <div class="action-btns">
+          <div class="icon-btn" onclick="event.stopPropagation();downloadDoc(${row.id})" title="下载">⬇️</div>
+          <div class="icon-btn" onclick="event.stopPropagation();syncDoc(${row.id})" title="同步">🔄</div>
+          <div class="icon-btn" onclick="event.stopPropagation();showToast('已复制链接')" title="分享">🔗</div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── VIEWS ──
+const overlayViews = ['member','oplog'];
+function showView(name) {
+  // 隐藏 .view class 的视图
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  // 隐藏 overlay 视图
+  overlayViews.forEach(n => {
+    const el = document.getElementById('view-'+n);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  if (overlayViews.includes(name)) {
+    // overlay 视图直接 flex 显示
+    const el = document.getElementById('view-'+name);
+    if (el) el.style.display = 'flex';
+  } else {
+    const target = document.getElementById('view-'+name);
+    if (target) target.classList.add('active');
+  }
+
+  // 高亮导航 - 直接用 data-view 属性匹配，不再靠索引
+  const navMap = {
+    list:0, upload:1, folder:2, category:3, rag:4, member:5, oplog:6
+  };
+  if (navMap[name] !== undefined) {
+    document.querySelectorAll('.nav-item')[navMap[name]]?.classList.add('active');
+  }
+}
+
+function openEditor(id) {
+  showView('editor');
+  setTimeout(()=>{ document.getElementById('chunkBar').style.width='0%'; setTimeout(()=>{ document.getElementById('chunkBar').style.width='75%'; },200); },100);
+}
+
+function openNewDoc() { document.getElementById('newDocModal').classList.add('show'); }
+function closeModal() { document.getElementById('newDocModal').classList.remove('show'); }
+
+function createDoc() {
+  closeModal();
+  showView('editor');
+  showToast('✅ 新条目已创建，开始编辑吧');
+}
+
+// ── UPLOAD ──
+let uploadedFiles = [];
+
+function triggerUpload() { document.getElementById('fileInput').click(); }
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const items = e.dataTransfer.items;
+  const files = [];
+  if (items) {
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+      if (entry) {
+        if (entry.isFile) {
+          files.push(items[i].getAsFile());
+        } else if (entry.isDirectory) {
+          // Folder: read all files recursively
+          readDirectory(entry, files);
+        }
+      }
+    }
+  }
+  // Fallback if no webkitGetAsEntry
+  if (files.length === 0 && e.dataTransfer.files.length > 0) {
+    for (let i = 0; i < e.dataTransfer.files.length; i++) files.push(e.dataTransfer.files[i]);
+  }
+  addFilesToList(files);
+}
+
+function readDirectory(dirEntry, fileList) {
+  const reader = dirEntry.createReader();
+  reader.readEntries(function(entries) {
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (e.isFile) {
+        e.file(function(file) { fileList.push(file); });
+      } else if (e.isDirectory) {
+        readDirectory(e, fileList);
+      }
+    }
+  });
+}
+
+function handleFileSelect(input) {
+  const files = Array.from(input.files);
+  if (files.length === 0) return;
+  addFilesToList(files);
+  input.value = '';
+}
+
+function addFilesToList(files) {
+  files.forEach(function(file) {
+    var exists = uploadedFiles.some(function(f) { return f.name === file.name && f.type === file.type; });
+    if (!exists) uploadedFiles.push(file);
+  });
+  renderFileList();
+  if (uploadedFiles.length > 0) {
+    var preview = document.getElementById('uploadPreview');
+    var placeholder = preview.querySelector('.upload-preview-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+    var first = uploadedFiles[0];
+    var ext = getExt(first.name).toLowerCase();
+    var icons = {'pdf':'📄','doc':'📝','docx':'📝','xlsx':'📊','xls':'📊','txt':'📃','md':'📃','pptx':'📽','ppt':'📽'};
+    preview.innerHTML = '<div class="upload-preview-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--text-muted);">' +
+      '<div style="font-size:36px;">' + (icons[ext] || '📄') + '</div>' +
+      '<div style="font-size:13px;font-weight:500;">' + first.name + '</div>' +
+      '<div style="font-size:12px;">' + (first.size / 1024).toFixed(1) + ' KB · 共 ' + uploadedFiles.length + ' 个文件</div>' +
+      '<div style="font-size:12px;margin-top:4px;">预览区显示当前选中文件内容（需后端支持）</div></div>';
+    preview.setAttribute('contenteditable', 'true');
+    preview.classList.add('has-content');
+    // Auto-fill format
+    var fmtMap = {'pdf':'PDF','doc':'Word','docx':'Word','xlsx':'Excel','xls':'Excel','txt':'TXT','md':'Markdown','pptx':'PPT','ppt':'PPT'};
+    var fmt = fmtMap[ext] || '';
+    var fmtSel = document.getElementById('uploadFormatSelect');
+    if (fmt && fmtSel) {
+      for (var i = 0; i < fmtSel.options.length; i++) {
+        if (fmtSel.options[i].value === fmt) { fmtSel.selectedIndex = i; break; }
+      }
+    }
+  }
+}
+
+function renderFileList() {
+  var el = document.getElementById('fileList');
+  if (!el) return;
+  var icons = {'pdf':'📄','doc':'📝','docx':'📝','xlsx':'📊','xls':'📊','txt':'📃','md':'📃','pptx':'📽','ppt':'📽'};
+  el.innerHTML = uploadedFiles.map(function(f, i) {
+    var ext = getExt(f.name).toLowerCase();
+    return '<div class="file-item">' +
+      '<span class="fi-icon">' + (icons[ext] || '📄') + '</span>' +
+      '<span class="fi-name" title="' + f.name + '">' + f.name + '</span>' +
+      '<span class="fi-size">' + (f.size / 1024).toFixed(1) + ' KB</span>' +
+      '<span class="fi-remove" onclick="removeFile(' + i + ')">✕</span>' +
+    '</div>';
+  }).join('');
+}
+
+function removeFile(index) {
+  showConfirm('确认从上传列表中移除该文件？', function() {
+    uploadedFiles.splice(index, 1);
+    renderFileList();
+    if (uploadedFiles.length === 0) {
+      var preview = document.getElementById('uploadPreview');
+      preview.innerHTML = '<div class="upload-preview-placeholder"><div style="font-size:36px;">📋</div><div style="font-size:13px;font-weight:500;">上传文件后，可在这里直接预览文件内容</div><div style="font-size:12px;">再继续完成右方配置</div></div>';
+      preview.classList.remove('has-content');
+    } else {
+      // Re-trigger preview with new first file
+      var dummyInput = { files: [uploadedFiles[0]] };
+      handleFileSelect(dummyInput);
+    }
+  });
+}
+
+function getExt(name) {
+  var parts = name.split('.');
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+}
+
+// triggerUploadPreview 已整合到 addFilesToList 中
+
+function updateUploadCat2() {
+  const cat1 = document.getElementById('uploadCat1').value;
+  const cat2Select = document.getElementById('uploadCat2');
+  const subs = cat2Sub[cat1] || [];
+  cat2Select.innerHTML = subs.length
+    ? subs.map(s=>`<option>${s}</option>`).join('')
+    : '<option>请先选一级分类</option>';
+  if (deptMap[cat1]) {
+    const deptSel = document.getElementById('uploadDeptSelect');
+    deptSel.value = deptMap[cat1];
+  }
+}
+
+// ── PERM ──
+function onViewPermChange() {
+  const val = document.getElementById('viewPermSelect').value;
+  const sub = document.getElementById('viewPermSub');
+  sub.classList.toggle('show', val === 'partial');
+}
+function onEditPermChange() {
+  const val = document.getElementById('editPermSelect').value;
+  const sub = document.getElementById('editPermSub');
+  sub.classList.toggle('show', val === 'partial');
+}
+
+// ── TAG INPUT ──
+function addTag(e) {
+  if (e.key !== 'Enter') return;
+  const input = document.getElementById('tagInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const wrap = document.getElementById('tagInputWrap');
+  const chip = document.createElement('span');
+  chip.className = 'tag-chip';
+  chip.innerHTML = `${val} <span class="remove" onclick="removeTag(this)">✕</span>`;
+  wrap.insertBefore(chip, input);
+  input.value = '';
+}
+function removeTag(el) { el.parentElement.remove(); }
+function removeEditorTag(el) { el.parentElement.remove(); }
+function addEditorTag(e) {
+  if (e.key !== 'Enter') return;
+  const input = document.getElementById('editorTagInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const wrap = document.getElementById('editorTagWrap');
+  const chip = document.createElement('span');
+  chip.className = 'tag-chip';
+  chip.innerHTML = `${val} <span class="remove" onclick="removeEditorTag(this)">✕</span>`;
+  wrap.insertBefore(chip, input);
+  input.value = '';
+}
+
+// ── CATEGORY MANAGEMENT ──
+let cat1List = [...cat1Data.map(c=>({...c}))];
+let cat2List = [...cat2Data.map(c=>({...c}))];
+let tagLib = [...tagLibData];
+
+let activeCat1Id = 'transcriptome'; // 默认选中第一个一级分类
+
+function setActiveCat1(id) {
+  activeCat1Id = id;
+  renderCat1();
+  renderCat2();
+}
+
+function renderCat1() {
+  document.getElementById('cat1List').innerHTML = cat1List.map(item=>`
+    <div class="cat-item ${item.id===activeCat1Id?'active':''}" onclick="setActiveCat1('${item.id}')" style="cursor:pointer;">
+      <span class="cat-item-name">${item.name}</span>
+      <span class="cat-item-count">${item.count} 篇</span>
+      <div class="cat-item-actions">
+        <button class="cat-action-btn" onclick="event.stopPropagation();editCatItem('cat1','${item.id}')" title="编辑">✏️</button>
+        <button class="cat-action-btn del" onclick="event.stopPropagation();deleteCat1('${item.id}')" title="删除">🗑</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('cat1Count').textContent = cat1List.length;
+}
+
+function renderCat2() {
+  // 只显示属于当前选中一级分类的二级分类
+  const subs = cat2Sub[activeCat1Id] || [];
+  const filtered = cat2List.filter(item => item.cat1Id === activeCat1Id);
+  document.getElementById('cat2List').innerHTML = filtered.map(item=>`
+    <div class="cat-item">
+      <span class="cat-item-name">${item.name}</span>
+      <span class="cat-item-count">${item.count} 篇</span>
+      <div class="cat-item-actions">
+        <button class="cat-action-btn" onclick="event.stopPropagation();editCatItem('cat2','${item.id}')" title="编辑">✏️</button>
+        <button class="cat-action-btn del" onclick="event.stopPropagation();deleteCat2('${item.id}')" title="删除">🗑</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('cat2Count').textContent = filtered.length;
+}
+
+function renderTagLib() {
+  document.getElementById('tagLibList').innerHTML = tagLib.map((t,i)=>`
+    <span class="tag-lib-item">${t} <span class="del-tag" onclick="deleteTagLib(${i})">✕</span></span>`).join('');
+  document.getElementById('tagLibCount').textContent = tagLib.length;
+}
+
+function addCat1() {
+  const input = document.getElementById('cat1Input');
+  const val = input.value.trim();
+  if (!val) return;
+  cat1List.push({id:'custom_'+Date.now(), name:val, count:0});
+  input.value = '';
+  renderCat1();
+  showToast('✅ 已添加一级分类：' + val);
+}
+
+function addCat2() {
+  const input = document.getElementById('cat2Input');
+  const val = input.value.trim();
+  if (!val) return;
+  cat2List.push({id:'custom_'+Date.now(), cat1Id:activeCat1Id, name:val, count:0});
+  input.value = '';
+  renderCat2();
+  const cat1Name = cat1Labels[activeCat1Id] || activeCat1Id;
+  showToast('✅ 已添加二级分类「' + val + '」至 ' + cat1Name);
+}
+
+function addTagLib() {
+  const input = document.getElementById('tagLibInput');
+  const val = input.value.trim();
+  if (!val) return;
+  tagLib.push(val);
+  input.value = '';
+  renderTagLib();
+  showToast('✅ 已添加标签：' + val);
+}
+
+function deleteCat1(id) {
+  const item = cat1List.find(c=>c.id===id);
+  showConfirm(`确认删除一级分类「${item?.name}」？删除后该分类下的文档将失去分类归属。`, () => {
+    cat1List = cat1List.filter(c=>c.id!==id);
+    if (activeCat1Id===id) { activeCat1Id = cat1List[0]?.id || ''; }
+    renderCat1(); renderCat2();
+    showToast('✅ 已删除分类'); logOp('删除', `删除一级分类「${item?.name}」`, '');
+  });
+}
+function deleteCat2(id) {
+  const item = cat2List.find(c=>c.id===id);
+  showConfirm(`确认删除二级分类「${item?.name}」？`, () => {
+    cat2List = cat2List.filter(c=>c.id!==id);
+    renderCat2();
+    showToast('✅ 已删除分类'); logOp('删除', `删除二级分类「${item?.name}」`, '');
+  });
+}
+function deleteTagLib(i) {
+  showConfirm(`确认删除标签「${tagLib[i]}」？`, () => {
+    tagLib.splice(i,1); renderTagLib(); showToast('✅ 标签已删除'); logOp('删除', `删除标签「${tagLib[i] || '—'}」`, '');
+  });
+}
+
+let confirmCallback = null;
+function showConfirm(msg, onConfirm) {
+  document.getElementById('confirmDesc').textContent = msg;
+  confirmCallback = onConfirm;
+  document.getElementById('confirmModal').classList.add('show');
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('show'); confirmCallback = null; }
+function doConfirm() { closeConfirm(); if (confirmCallback) confirmCallback(); }
+
+function logOp(action, content, doc) {
+  opLogs.unshift({ time: new Date().toLocaleString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(/\//g,'-'), user:'Amily', action, content, doc: doc || '—' });
+  if (document.getElementById('logTableBody')) renderLogTable(opLogs);
+}
+
+function editCatItem(type, id) {
+  const list = type === 'cat1' ? cat1List : cat2List;
+  const item = list.find(c=>c.id===id);
+  if (!item) return;
+  const newName = prompt('修改名称：', item.name);
+  if (newName && newName.trim()) {
+    item.name = newName.trim();
+    type === 'cat1' ? renderCat1() : renderCat2();
+    showToast('✅ 名称已更新');
+  }
+}
+
+// ── FILTER ──
+function filterByCategory(val) {
+  renderTable(val ? kbData.filter(d => d.cat1 === val) : kbData);
+}
+function filterByDept(val) {
+  renderTable(val ? kbData.filter(d => d.dept === (
+    {market:'市场部',rd:'研发部',ops:'运营部',support:'技术支持',hr:'人事部',detection:'检测部'}[val] || val
+  )) : kbData);
+}
+
+function setTab(el, tab) {
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='全部') renderTable(kbData);
+  else if(tab==='已同步') renderTable(kbData.filter(d=>d.sync==='synced'));
+  else if(tab==='待同步') renderTable(kbData.filter(d=>d.sync==='pending'||d.sync==='syncing'));
+  else renderTable(kbData.filter(d=>d.sync==='draft'));
+}
+
+function handleSearch(val) {
+  if(!val.trim()){ renderTable(kbData); return; }
+  const q = val.toLowerCase();
+  renderTable(kbData.filter(d => d.title.toLowerCase().includes(q) || d.tags.some(t=>t.includes(q)) || (cat1Labels[d.cat1]||'').includes(q) || d.dept.includes(q)));
+}
+
+// ── ACTIONS ──
+function saveDoc() { showToast('✅ 已保存'); }
+function deleteDoc() {
+  showConfirm('确认删除该文档？此操作不可恢复，删除后该文档将无法恢复。', () => {
+    showView('list'); showToast('🗑 文档已删除'); logOp('删除', '删除文档《转录组产品送样规范（2026版）》', '转录组产品送样规范（2026版）');
+  });
+}
+function downloadDoc(id) { showToast('⬇️ 正在下载文档…'); }
+function syncDoc(id) { showToast('🔄 开始同步条目…'); setTimeout(()=>showToast('✅ 同步完成'), 1500); }
+
+function publishDoc() {
+  showToast('🚀 正在同步到 RAG…');
+  const bar = document.getElementById('chunkBar');
+  if(bar){ bar.style.width='0%'; setTimeout(()=>bar.style.width='40%',300); setTimeout(()=>bar.style.width='80%',900); setTimeout(()=>{ bar.style.width='100%'; showToast('✅ RAG 同步完成！'); updateRagBadge('synced'); },1800); }
+}
+
+function triggerSync() {
+  showToast('🔄 全量同步已触发…');
+  updateRagBadge('syncing');
+  const bar = document.getElementById('syncBar1');
+  if(bar){ bar.style.width='0%'; setTimeout(()=>bar.style.width='100%',800); }
+  setTimeout(()=>{ showToast('✅ 全量同步完成，47 个条目已更新'); updateRagBadge('synced'); },2500);
+}
+
+function updateRagBadge(state) {
+  const badge = document.getElementById('ragBadge');
+  const text = document.getElementById('ragBadgeText');
+  badge.className = 'rag-sync-badge ' + state;
+  if(state==='synced') text.textContent = 'RAG 已同步';
+  else if(state==='syncing') text.textContent = 'RAG 同步中…';
+  else text.textContent = 'RAG 待同步';
+}
+
+function toggleAutoSync(el) {
+  const on = el.style.background === 'var(--primary)';
+  el.style.background = on ? '#e2e8f0' : 'var(--primary)';
+  const dot = el.querySelector('div');
+  dot.style.right = on ? 'auto' : '2px';
+  dot.style.left = on ? '2px' : 'auto';
+  el.nextElementSibling.textContent = on ? '已关闭' : '已开启';
+  el.nextElementSibling.style.color = on ? 'var(--text-muted)' : 'var(--success)';
+}
+
+function updateWordCount() {
+  const t = document.getElementById('editorBody').innerText || '';
+  const count = t.trim().length;
+  document.getElementById('wordCount').textContent = count + ' 字';
+  document.getElementById('sidebarWordCount').textContent = '约 ' + count + ' 字';
+}
+function formatText(cmd) { document.execCommand(cmd); }
+function insertHeading() {
+  const sel = window.getSelection();
+  if(sel && sel.rangeCount) {
+    const range = sel.getRangeAt(0);
+    const h = document.createElement('h3');
+    h.textContent = sel.toString() || '小标题';
+    range.deleteContents(); range.insertNode(h);
+  }
+}
+function insertLink() {
+  const url = prompt('输入链接URL：','https://');
+  if(url) document.execCommand('createLink', false, url);
+}
+function insertParamTable() {
+  document.getElementById('editorBody').innerHTML += `<br><table><tr><th>参数名</th><th>参数值</th><th>备注</th></tr><tr><td>项目1</td><td>值1</td><td></td></tr></table>`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── MEMBER MANAGEMENT ──
+const avatarBgColors = ['#e0e7ff','#fce7f3','#dcfce7','#fef9c3','#ffedd5','#f0fdfa','#f5f3ff'];
+const avatarFgColors = ['#4f46e5','#db2777','#16a34a','#ca8a04','#ea580c','#0d9488','#7c3aed'];
+
+let groups = [
+  { id:'all', name:'全部成员', count:10 },
+  { id:'ungroup', name:'未分组', count:8 },
+  { id:'maiwei', name:'迈维云平台', count:2 },
+];
+let activeGroup = 'all';
+
+let members = [
+  { id:1, name:'程细辉', contact:'chengx2000@sina.com · 186****2498', group:'迈维云平台', lastOp:'2026-04-16', role:'超级管理员', inviter:'Amily', active:true, colorIdx:0 },
+  { id:2, name:'闻工', contact:'159****4820', group:'未分组', lastOp:'2026-04-13', role:'团队成员', inviter:'Amily', active:true, colorIdx:1 },
+  { id:3, name:'159****5880', contact:'159****5880', group:'未分组', lastOp:'2025-09-08', role:'团队成员', inviter:'Amily', active:true, colorIdx:2 },
+  { id:4, name:'微信用户emyz', contact:'', group:'未分组', lastOp:'2025-07-16', role:'团队成员', inviter:'Amily', active:true, colorIdx:3 },
+  { id:5, name:'132****3944', contact:'132****3944', group:'未分组', lastOp:'2025-07-18', role:'团队成员', inviter:'Amily', active:true, colorIdx:4 },
+  { id:6, name:'张明', contact:'zhangm@maiwei.com', group:'未分组', lastOp:'2026-04-10', role:'管理员', inviter:'Amily', active:true, colorIdx:5 },
+  { id:7, name:'李萌', contact:'lim@maiwei.com', group:'未分组', lastOp:'2026-04-09', role:'团队成员', inviter:'张明', active:true, colorIdx:6 },
+  { id:8, name:'王强', contact:'wangq@maiwei.com', group:'未分组', lastOp:'2026-04-08', role:'团队成员', inviter:'张明', active:true, colorIdx:0 },
+  { id:9, name:'赵丽', contact:'zhaoli@maiwei.com', group:'迈维云平台', lastOp:'2026-04-07', role:'团队成员', inviter:'Amily', active:true, colorIdx:1 },
+  { id:10, name:'陈宇', contact:'chenyu@maiwei.com', group:'未分组', lastOp:'2025-12-01', role:'团队成员', inviter:'Amily', active:false, colorIdx:2 },
+];
+
+function getInitials(name) {
+  if (!name) return '?';
+  const n = name.trim();
+  if (/^[\u4e00-\u9fa5]/.test(n)) return n.slice(-2);
+  return n.slice(0,2).toUpperCase();
+}
+
+function renderGroupTabs() {
+  const container = document.getElementById('groupTabList');
+  if (!container) return;
+  container.innerHTML = groups.map(g => `
+    <div class="nav-item ${g.id===activeGroup?'active':''}" onclick="setActiveGroup('${g.id}')" style="justify-content:space-between;">
+      <span>${g.name}</span>
+      <span style="font-size:12px;color:${g.id===activeGroup?'var(--primary)':'var(--text-muted)'};">${g.count}</span>
+    </div>`).join('');
+}
+
+function setActiveGroup(gid) {
+  activeGroup = gid;
+  renderGroupTabs();
+  const g = groups.find(x=>x.id===gid);
+  document.getElementById('currentGroupLabel').textContent = '当前视图：' + (g?g.name:'全部成员');
+  let list = members;
+  if (gid === 'ungroup') list = members.filter(m=>m.group==='未分组');
+  else if (gid !== 'all') list = members.filter(m=>m.group===(g?g.name:''));
+  renderMemberTable(list);
+}
+
+function renderMemberTable(list) {
+  const tbody = document.getElementById('memberTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = list.map(m => {
+    const bg = avatarBgColors[m.colorIdx % avatarBgColors.length];
+    const fg = avatarFgColors[m.colorIdx % avatarFgColors.length];
+    const initials = getInitials(m.name);
+    const roleStyle = m.role==='超级管理员' ? 'background:#fee2e2;color:#dc2626;' : m.role==='管理员' ? 'background:#dbeafe;color:#2563eb;' : 'background:#f1f5f9;color:#475569;';
+    return `<tr>
+      <td><input type="checkbox" class="member-check"></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar" style="background:${bg};color:${fg};font-size:11px;flex-shrink:0;">${initials}</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text);">${m.name}</div>
+            ${m.contact?`<div style="font-size:11px;color:var(--text-muted);">${m.contact}</div>`:''}
+          </div>
+        </div>
+      </td>
+      <td style="font-size:13px;color:var(--text-muted);">${m.group}</td>
+      <td style="font-size:13px;color:var(--text-muted);">${m.lastOp}</td>
+      <td><span style="padding:2px 8px;border-radius:12px;font-size:12px;${roleStyle}">${m.role}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div class="avatar" style="width:22px;height:22px;font-size:10px;background:var(--primary-light);color:var(--primary);">${getInitials(m.inviter)}</div>
+          <span style="font-size:12px;color:var(--text-muted);">${m.inviter}</span>
+        </div>
+      </td>
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;${m.active?'color:#16a34a;':'color:var(--text-muted);'}">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span>
+          ${m.active?'已激活':'未激活'}
+        </span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterMembers(val) {
+  const q = val.trim().toLowerCase();
+  const g = groups.find(x=>x.id===activeGroup);
+  let list = members;
+  if (activeGroup==='ungroup') list = members.filter(m=>m.group==='未分组');
+  else if (activeGroup!=='all') list = members.filter(m=>m.group===(g?g.name:''));
+  if (q) list = list.filter(m => m.name.toLowerCase().includes(q) || m.contact.includes(q));
+  renderMemberTable(list);
+}
+
+function toggleAllMembers(cb) {
+  document.querySelectorAll('.member-check').forEach(c=>c.checked=cb.checked);
+}
+
+function showInviteModal() { document.getElementById('inviteModal').classList.add('show'); }
+function showAddGroupModal() { document.getElementById('addGroupModal').classList.add('show'); }
+
+function doInvite() {
+  const contact = document.getElementById('inviteContact').value.trim();
+  if (!contact) { showToast('请输入手机号或邮箱'); return; }
+  const group = document.getElementById('inviteGroup').value || '未分组';
+  const role = document.getElementById('inviteRole').value;
+  const colorIdx = members.length % avatarBgColors.length;
+  members.push({ id: members.length+1, name: contact, contact: contact, group, lastOp:'—', role, inviter:'Amily', active:false, colorIdx });
+  const g = groups.find(x=>x.name===group);
+  if(g) g.count++;
+  groups[0].count++;
+  document.getElementById('inviteContact').value='';
+  document.getElementById('inviteModal').classList.remove('show');
+  renderGroupTabs();
+  setActiveGroup(activeGroup);
+  showToast('✅ 邀请已发送至：' + contact);
+  // log it
+  opLogs.unshift({ time: new Date().toLocaleString('zh-CN',{hour12:false}).replace(/\//g,'-'), user:'Amily', action:'邀请', content:`邀请 ${contact} 加入团队（${group}）`, doc:'—' });
+  renderLogTable(opLogs);
+}
+
+function doAddGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  if (!name) { showToast('请输入用户组名称'); return; }
+  if (groups.find(g=>g.name===name)) { showToast('该用户组已存在'); return; }
+  groups.push({ id: 'g_'+Date.now(), name, count:0 });
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('addGroupModal').classList.remove('show');
+  renderGroupTabs();
+  showToast('✅ 已创建用户组：' + name);
+}
+
+// ── OPERATION LOG ──
+const opLogs = [
+  { time:'2026-04-16 10:12:33', user:'张明', action:'同步', content:'将《转录组产品送样规范（2026版）》同步至 RAG，生成 3 个向量 chunks', doc:'转录组产品送样规范（2026版）' },
+  { time:'2026-04-16 09:55:10', user:'李萌', action:'编辑', content:'编辑《差异分析方法说明与适用场景》，更新第二节适用场景描述', doc:'差异分析方法说明与适用场景' },
+  { time:'2026-04-16 09:30:04', user:'王强', action:'上传', content:'上传新文档《云平台数据上传操作指引》，格式：PDF，分类：云平台 / 数据上传', doc:'云平台数据上传操作指引' },
+  { time:'2026-04-15 17:48:22', user:'赵丽', action:'同步', content:'将《蛋白组定性定量分析流程》同步至 RAG，生成 5 个向量 chunks', doc:'蛋白组定性定量分析流程' },
+  { time:'2026-04-15 16:20:11', user:'张明', action:'编辑', content:'编辑《转录组产品送样规范（2026版）》，更新 RNA 质控标准（RIN 标准由 6.5 改为 7.0）', doc:'转录组产品送样规范（2026版）' },
+  { time:'2026-04-15 15:05:00', user:'李萌', action:'上传', content:'上传新文档《差异分析方法说明与适用场景》，格式：Word，分类：转录组 / 差异分析', doc:'差异分析方法说明与适用场景' },
+  { time:'2026-04-15 14:30:55', user:'王强', action:'删除', content:'删除文档《旧版云平台FAQ（2024）》', doc:'旧版云平台FAQ（2024）' },
+  { time:'2026-04-15 11:12:40', user:'赵丽', action:'上传', content:'上传新文档《蛋白组定性定量分析流程》，格式：PDF，分类：蛋白组 / 蛋白定量', doc:'蛋白组定性定量分析流程' },
+  { time:'2026-04-14 18:00:05', user:'张明', action:'同步', content:'触发全量同步，共 47 个条目，更新向量库 284 个 chunks', doc:'— 全量同步 —' },
+  { time:'2026-04-14 16:22:18', user:'李萌', action:'编辑', content:'编辑《微生物组 16S 测序质控标准》，补充外送样本备注说明', doc:'微生物组 16S 测序质控标准' },
+  { time:'2026-04-14 10:05:33', user:'王强', action:'上传', content:'上传新文档《单细胞转录组 UMAP 聚类分析说明》，格式：Markdown，分类：单细胞 / UMAP 分析', doc:'单细胞转录组 UMAP 聚类分析说明' },
+  { time:'2026-04-13 15:30:00', user:'赵丽', action:'下载', content:'下载文档《多组学联合分析数据整合规范》', doc:'多组学联合分析数据整合规范' },
+];
+
+const actionStyle = {
+  '上传': 'background:#dbeafe;color:#2563eb;',
+  '编辑': 'background:#fef9c3;color:#ca8a04;',
+  '同步': 'background:#dcfce7;color:#16a34a;',
+  '删除': 'background:#fee2e2;color:#dc2626;',
+  '下载': 'background:#f3e8ff;color:#9333ea;',
+  '邀请': 'background:#ffedd5;color:#ea580c;',
+};
+
+function renderLogTable(list) {
+  const tbody = document.getElementById('logTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = list.map(log => {
+    const style = actionStyle[log.action] || 'background:#f1f5f9;color:#475569;';
+    const colorIdx = ['张明','李萌','王强','赵丽','Amily'].indexOf(log.user) % avatarBgColors.length;
+    const bg2 = avatarBgColors[Math.max(0,colorIdx)];
+    const fg2 = avatarFgColors[Math.max(0,colorIdx)];
+    return `<tr>
+      <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${log.time}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="avatar" style="width:26px;height:26px;font-size:11px;background:${bg2};color:${fg2};flex-shrink:0;">${getInitials(log.user)}</div>
+          <span style="font-size:13px;font-weight:500;">${log.user}</span>
+        </div>
+      </td>
+      <td><span style="padding:2px 10px;border-radius:12px;font-size:12px;${style}">${log.action}</span></td>
+      <td style="font-size:13px;color:var(--text);">${log.content}</td>
+      <td style="font-size:12px;color:var(--primary);">${log.doc}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterLogs() {
+  const action = document.getElementById('logActionFilter').value;
+  const user = document.getElementById('logUserFilter').value;
+  let list = opLogs;
+  if (action) list = list.filter(l=>l.action===action);
+  if (user) list = list.filter(l=>l.user===user);
+  renderLogTable(list);
+}
+
+// ── INIT ──
+renderTable(kbData);
+setActiveCat1('transcriptome'); // 默认选中第一个一级分类
+renderTagLib();
+renderGroupTabs();
+setActiveGroup('all');
+renderLogTable(opLogs);
+updateWordCount();
+setTimeout(()=>updateRagBadge('synced'), 4000);
+setTimeout(()=>{ const bar = document.getElementById('syncBar1'); if(bar){ bar.style.width='0%'; setTimeout(()=>bar.style.width='60%',200); } },500);
+
+// ── FOLDER BROWSER ──
+const folderData = [
+  // Folders
+  { id:'f1', name:'转录组资料库', type:'folder', parent:'', size:'', created:'2026-03-01', owner:'张明' },
+  { id:'f2', name:'蛋白组资料库', type:'folder', parent:'', size:'', created:'2026-03-05', owner:'赵丽' },
+  { id:'f3', name:'代谢组资料库', type:'folder', parent:'', size:'', created:'2026-03-10', owner:'张明' },
+  { id:'f4', name:'云平台使用指南', type:'folder', parent:'', size:'', created:'2026-03-15', owner:'王强' },
+  { id:'f5', name:'送样规范汇总', type:'folder', parent:'f1', size:'', created:'2026-03-02', owner:'张明' },
+  { id:'f6', name:'分析 SOP', type:'folder', parent:'f1', size:'', created:'2026-03-03', owner:'张明' },
+  { id:'f7', name:'常见问题 FAQ', type:'folder', parent:'f4', size:'', created:'2026-03-16', owner:'王强' },
+  // Files
+  { id:'f8', name:'转录组产品送样规范（2026版）', type:'file', ext:'pdf', parent:'', cat1:'转录组', cat2:'送样规范', size:'2.4 MB', created:'2026-03-01', owner:'张明' },
+  { id:'f9', name:'差异分析方法说明与适用场景', type:'file', ext:'docx', parent:'f6', cat1:'转录组', cat2:'分析方法', size:'1.1 MB', created:'2026-03-03', owner:'李萌' },
+  { id:'f10', name:'云平台常见问题与排查清单', type:'file', ext:'md', parent:'f7', cat1:'云平台', cat2:'常见问题', size:'356 KB', created:'2026-03-16', owner:'王强' },
+  { id:'f11', name:'蛋白组定性定量分析流程', type:'file', ext:'pdf', parent:'f2', cat1:'蛋白组', cat2:'蛋白定量', size:'3.2 MB', created:'2026-03-05', owner:'赵丽' },
+  { id:'f12', name:'代谢组 Q-TOF 上机操作 SOP', type:'file', ext:'docx', parent:'f3', cat1:'代谢组', cat2:'操作SOP', size:'890 KB', created:'2026-03-10', owner:'张明' },
+  { id:'f13', name:'微生物组 16S 测序质控标准', type:'file', ext:'pdf', parent:'', cat1:'微生物组', cat2:'质控标准', size:'1.5 MB', created:'2026-03-12', owner:'李萌' },
+];
+
+let folderView = 'grid';
+let folderPath = []; // stack of folder ids (empty = root)
+let selectedFolderItem = null;
+
+function getCurrentParent() { return folderPath.length > 0 ? folderPath[folderPath.length - 1].id : ''; }
+
+function getFolderChildren(parent) {
+  return folderData.filter(item => item.parent === parent);
+}
+
+function getExtIcon(ext) {
+  const map = { pdf:'📄', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', md:'📋', txt:'📃', pptx:'📊', ppt:'📊', folder:'📁' };
+  return map[ext] || '📎';
+}
+
+function renderFolder() {
+  const parent = getCurrentParent();
+  const items = getFolderChildren(parent);
+  const body = document.getElementById('folderBody');
+  if (!body) return;
+
+  // Update breadcrumb
+  const bc = document.getElementById('folderBreadcrumb');
+  if (bc) {
+    let html = `<span class="breadcrumb-item" onclick="folderNavigate('')">📂 全部文件</span>`;
+    folderPath.forEach(p => {
+      html += `<span class="breadcrumb-sep"> / </span><span class="breadcrumb-item" onclick="folderNavigate('${p.id}')">📁 ${p.name}</span>`;
+    });
+    bc.innerHTML = html;
+  }
+
+  if (items.length === 0) {
+    body.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+      <div style="font-size:48px;margin-bottom:12px;">📂</div>
+      <div style="font-size:14px;">当前目录为空，拖入文件或新建文件夹开始整理</div>
+    </div>`;
+    return;
+  }
+
+  // Folders first, then files
+  const folders = items.filter(i => i.type === 'folder');
+  const files = items.filter(i => i.type === 'file');
+  const sorted = [...folders, ...files];
+
+  if (folderView === 'grid') {
+    body.className = 'folder-grid';
+    body.innerHTML = sorted.map(item => `
+      <div class="folder-card" onclick="folderItemClick(event,'${item.id}')" oncontextmenu="showFolderContext(event,'${item.id}')" data-id="${item.id}">
+        <div class="folder-card-icon">${item.type === 'folder' ? '📁' : getExtIcon(item.ext)}</div>
+        <div class="folder-card-name">${item.name}</div>
+        ${item.type === 'file' ? `<div class="folder-card-meta">${item.size}</div>` : ''}
+      </div>
+    `).join('');
+  } else {
+    body.className = 'folder-list';
+    body.innerHTML = `
+      <div class="folder-list-header">
+        <span>名称</span><span>分类</span><span>大小</span><span>操作</span>
+      </div>
+      ${sorted.map(item => `
+        <div class="folder-list-item" onclick="folderItemClick(event,'${item.id}')" oncontextmenu="showFolderContext(event,'${item.id}')" data-id="${item.id}">
+          <div class="folder-name-cell">
+            <span class="item-icon">${item.type === 'folder' ? '📁' : getExtIcon(item.ext)}</span>
+            <span class="item-name">${item.name}</span>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted)">${item.type === 'file' ? (item.cat1 || '') : ''}</span>
+          <span style="font-size:12px;color:var(--text-muted)">${item.type === 'file' ? item.size : ''}</span>
+          <div class="contributor-avatars" style="justify-content:flex-start;" onclick="event.stopPropagation()">
+            <div class="avatar" style="width:24px;height:24px;font-size:11px;background:var(--primary-light);color:var(--primary)">${item.owner[0]}</div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+}
+
+function folderItemClick(event, id) {
+  event.stopPropagation();
+  const item = folderData.find(i => i.id === id);
+  if (!item) return;
+  if (item.type === 'folder') {
+    folderPath.push({ id: item.id, name: item.name });
+    renderFolder();
+  } else {
+    // Open document detail
+    const doc = kbData.find(d => d.title === item.name);
+    if (doc) { openEditor(doc.id); }
+  }
+}
+
+function folderNavigate(id) {
+  if (id === '') { folderPath = []; }
+  else {
+    const idx = folderPath.findIndex(p => p.id === id);
+    if (idx >= 0) folderPath = folderPath.slice(0, idx + 1);
+    else folderPath.push({ id: id, name: folderData.find(i => i.id === id)?.name || '' });
+  }
+  renderFolder();
+}
+
+function setFolderView(v) {
+  folderView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderFolder();
+}
+
+function folderNewFolder() {
+  const name = prompt('请输入文件夹名称：');
+  if (name && name.trim()) {
+    const newId = 'f_' + Date.now();
+    folderData.push({ id: newId, name: name.trim(), type:'folder', parent: getCurrentParent(), size:'', created: new Date().toISOString().slice(0,10), owner:'当前用户' });
+    renderFolder();
+    logOp('新建文件夹', `新建文件夹「${name.trim()}」`, '');
+    showToast('✅ 文件夹已创建');
+  }
+}
+
+function folderUpload() {
+  showView('upload');
+}
+
+function showFolderContext(event, id) {
+  event.preventDefault();
+  event.stopPropagation();
+  const menu = document.getElementById('folderCtxMenu');
+  if (!menu) return;
+  menu.style.left = (event.clientX + 5) + 'px';
+  menu.style.top = (event.clientY + 5) + 'px';
+  menu.classList.add('show');
+  menu.dataset.target = id;
+}
+
+function hideFolderCtx() {
+  const menu = document.getElementById('folderCtxMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+document.addEventListener('click', hideFolderCtx);
+
+function folderOpenItem() {
+  const id = document.getElementById('folderCtxMenu')?.dataset?.target;
+  if (!id) return;
+  hideFolderCtx();
+  const item = folderData.find(i => i.id === id);
+  if (!item) return;
+  if (item.type === 'folder') {
+    folderPath.push({ id: item.id, name: item.name });
+    renderFolder();
+  } else {
+    const doc = kbData.find(d => d.title === item.name);
+    if (doc) openEditor(doc.id);
+  }
+}
+
+function folderRenameItem() {
+  const id = document.getElementById('folderCtxMenu')?.dataset?.target;
+  if (!id) return;
+  hideFolderCtx();
+  const item = folderData.find(i => i.id === id);
+  if (!item) return;
+  const newName = prompt('请输入新名称：', item.name);
+  if (newName && newName.trim()) {
+    item.name = newName.trim();
+    renderFolder();
+    showToast('✅ 已重命名');
+  }
+}
+
+function folderMoveItem() {
+  const id = document.getElementById('folderCtxMenu')?.dataset?.target;
+  if (!id) return;
+  hideFolderCtx();
+  showToast('💡 移动功能开发中');
+}
+
+function folderCopyLink() {
+  const id = document.getElementById('folderCtxMenu')?.dataset?.target;
+  if (!id) return;
+  hideFolderCtx();
+  showToast('🔗 链接已复制');
+}
+
+function folderDeleteItem() {
+  const id = document.getElementById('folderCtxMenu')?.dataset?.target;
+  if (!id) return;
+  hideFolderCtx();
+  const item = folderData.find(i => i.id === id);
+  if (!item) return;
+  showConfirm(`确认删除「${item.name}」？此操作不可恢复。`, () => {
+    const idx = folderData.findIndex(i => i.id === id);
+    if (idx >= 0) folderData.splice(idx, 1);
+    renderFolder();
+    logOp('删除', `删除${item.type === 'folder' ? '文件夹' : '文件'}「${item.name}」`, item.name);
+    showToast('🗑️ 已删除');
+  });
+}
+
+// Init folder
+renderFolder();
+</script>
+</body>
+</html>
