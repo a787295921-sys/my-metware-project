@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIMS Data Integration - Project Status Update</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f0f0f0; }
+    ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 3px; }
+
+    /* Nav */
+    .nav-item { position: relative; }
+    .nav-item.active {
+      color: #1890ff !important;
+    }
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: -4px;
+      right: -4px;
+      height: 4px;
+      background-color: #1890ff;
+      border-radius: 2px;
+    }
+
+    /* Sidebar */
+    .sidebar-item {
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .sidebar-item.active {
+      background-color: #e6f7ff;
+      color: #1890ff;
+      font-weight: 500;
+    }
+    .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background-color: #1890ff;
+    }
+    .sidebar-item:hover:not(.active) { color: #1890ff; }
+
+    /* Table */
+    .table-header {
+      background-color: #fafafa;
+      font-weight: 500;
+      color: #262626;
+    }
+    .table-row { transition: background 0.15s; }
+    .table-row:hover { background-color: #e6f7ff; }
+
+    /* Buttons */
+    .btn-primary {
+      background-color: #1890ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background-color: #40a9ff; }
+    .btn-default {
+      background-color: white;
+      border: 1px solid #d9d9d9;
+      color: #595959;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-default:hover {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+
+    /* Inputs */
+    .input-field {
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 5px 11px;
+      font-size: 14px;
+      color: #262626;
+      transition: all 0.2s;
+      outline: none;
+      background: white;
+    }
+    .input-field:focus {
+      border-color: #40a9ff;
+      box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+    }
+    .input-field::placeholder { color: #bfbfbf; }
+
+    /* Pagination */
+    .pagination-btn {
+      border: 1px solid #d9d9d9;
+      background: white;
+      color: #595959;
+      min-width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    .pagination-btn:hover:not(.active):not(:disabled) {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+    .pagination-btn.active {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+    .pagination-btn:disabled {
+      color: #d9d9d9;
+      cursor: not-allowed;
+    }
+
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 40;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .top-nav-links { display: none; }
+      .top-nav-links.mobile-open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 8px 16px;
+        z-index: 50;
+        gap: 0;
+      }
+      .top-nav-links.mobile-open .nav-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+      }
+      .top-nav-links.mobile-open .nav-item.active::after { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-desktop { display: none; }
+      .sidebar-mobile {
+        display: block;
+        position: fixed;
+        left: -220px;
+        top: 56px;
+        bottom: 0;
+        width: 200px;
+        background: white;
+        border-right: 1px solid #f0f0f0;
+        transition: left 0.3s ease;
+        z-index: 50;
+      }
+      .sidebar-mobile.open { left: 0; }
+      .main-content { padding: 16px; }
+      .search-panel-inner {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+      .search-panel-inner > div,
+      .search-panel-inner > button {
+        width: 100% !important;
+      }
+      .search-panel-inner input,
+      .search-panel-inner select {
+        width: 100% !important;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .sidebar-mobile { display: none; }
+      .mobile-menu-btn { display: none; }
+      .mobile-nav-toggle { display: none; }
+    }
+  </style>
+</head>
+<body class="bg-[#f5f5f5] min-h-screen">
+
+  <!-- Top Navigation -->
+  <header class="bg-white border-b border-[#f0f0f0] h-14 flex items-center px-4 lg:px-6 sticky top-0 z-50 overflow-visible">
+    <button onclick="toggleMobileSidebar()" class="mobile-menu-btn mr-3 p-1 rounded hover:bg-[#f5f5f5]">
+      <svg class="w-5 h-5 text-[#595959]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <div class="flex items-center gap-2 mr-4 lg:mr-8">
+      <div class="flex flex-col">
+        <span class="text-[#1890ff] font-bold text-base lg:text-lg leading-tight tracking-wide">METWARE BIO</span>
+        <span class="text-[9px] lg:text-[10px] text-[#595959] leading-tight hidden sm:block">Innovative Multi-Omics Insights for Better Health</span>
+      </div>
+    </div>
+
+    <div class="hidden md:flex items-center gap-1 mr-4 lg:mr-8">
+      <svg class="w-5 h-5 lg:w-6 lg:h-6 text-[#1890ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+      </svg>
+      <span class="text-[12px] lg:text-[13px] text-[#595959] font-medium">Metware Cloud</span>
+    </div>
+
+    <nav id="topNavLinks" class="top-nav-links hidden lg:flex items-center gap-6 xl:gap-8 flex-1">
+      <a href="#" class="nav-item text-[13px] xl:text-[14px] text-[#595959] hover:text-[#1890ff] py-4">My Analysis</a>
+      <a href="#" class="nav-item text-[13px] xl:text-[14px] text-[#595959] hover:text-[#1890ff] py-4">My Data</a>
+      <a href="#" class="nav-item text-[13px] xl:text-[14px] text-[#595959] hover:text-[#1890ff] py-4">Cloud Tools</a>
+      <a href="#" class="nav-item text-[13px] xl:text-[14px] text-[#595959] hover:text-[#1890ff] py-4">Cloud Processes</a>
+      <a href="#" class="nav-item text-[13px] xl:text-[14px] text-[#595959] hover:text-[#1890ff] py-4">Product Mall</a>
+      <a href="#" class="nav-item active text-[13px] xl:text-[14px] text-[#262626] font-medium py-4">Metware Projects</a>
+    </nav>
+
+    <button onclick="toggleMobileNav()" class="mobile-nav-toggle ml-auto p-1 rounded hover:bg-[#f5f5f5] lg:hidden">
+      <svg class="w-5 h-5 text-[#595959]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+
+    <div class="hidden sm:flex items-center gap-2 ml-4">
+      <div class="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-[#f5f5f5] flex items-center justify-center overflow-hidden border border-[#e8e8e8]">
+        <svg class="w-4 h-4 lg:w-5 lg:h-5 text-[#8c8c8c]" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <span class="text-[13px] lg:text-[14px] text-[#262626]">One</span>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Dropdown -->
+  <nav id="mobileNavLinks" class="top-nav-links hidden bg-white border-b border-[#f0f0f0]">
+    <a href="#" class="nav-item text-[14px] text-[#595959] hover:text-[#1890ff] py-3 px-4 block">My Analysis</a>
+    <a href="#" class="nav-item text-[14px] text-[#595959] hover:text-[#1890ff] py-3 px-4 block">My Data</a>
+    <a href="#" class="nav-item text-[14px] text-[#595959] hover:text-[#1890ff] py-3 px-4 block">Cloud Tools</a>
+    <a href="#" class="nav-item text-[14px] text-[#595959] hover:text-[#1890ff] py-3 px-4 block">Cloud Processes</a>
+    <a href="#" class="nav-item text-[14px] text-[#595959] hover:text-[#1890ff] py-3 px-4 block">Product Mall</a>
+    <a href="#" class="nav-item active text-[14px] text-[#262626] font-medium py-3 px-4 block">Metware Projects</a>
+  </nav>
+
+  <div class="flex relative">
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar-desktop w-[200px] bg-white border-r border-[#f0f0f0] min-h-[calc(100vh-56px)] flex-shrink-0">
+      <nav class="py-2">
+        <a href="#" class="sidebar-item active block px-5 py-3 text-[14px] text-[#1890ff]">Project Status Update</a>
+        <a href="#" class="sidebar-item block px-5 py-3 text-[14px] text-[#595959]">Client info</a>
+        <a href="#" class="sidebar-item block px-5 py-3 text-[14px] text-[#595959]">Sales statistics</a>
+      </nav>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+    <aside id="mobileSidebar" class="sidebar-mobile">
+      <nav class="py-2">
+        <a href="#" class="sidebar-item active block px-5 py-3 text-[14px] text-[#1890ff]">Project Status Update</a>
+        <a href="#" class="sidebar-item block px-5 py-3 text-[14px] text-[#595959]">Client info</a>
+        <a href="#" class="sidebar-item block px-5 py-3 text-[14px] text-[#595959]">Sales statistics</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content flex-1 p-4 lg:p-6 min-w-0">
+      <!-- Combined Content Block -->
+      <div class="bg-white rounded shadow-sm">
+        <!-- Page Title -->
+        <div class="px-4 pt-4 pb-0">
+          <h1 class="text-[18px] lg:text-[20px] text-[#1890ff] font-medium">Project Status Update</h1>
+          <div class="relative mt-2">
+            <div class="h-[4px] bg-[#1890ff] w-[160px] lg:w-[180px] rounded-sm"></div>
+            <div class="border-b border-[#f0f0f0] absolute bottom-0 left-0 right-0"></div>
+          </div>
+        </div>
+
+        <!-- Search Panel -->
+        <div class="p-4 border-b border-[#f0f0f0]">
+          <div class="search-panel-inner flex items-end gap-3 flex-wrap">
+            <div class="flex flex-col gap-1 w-[260px] max-w-[260px]">
+              <label class="text-[12px] text-[#8c8c8c]">Sub-project ID</label>
+              <input type="text" id="searchSubProjectId" placeholder="Enter Sub-project ID" class="input-field w-full h-[34px]">
+            </div>
+            <div class="flex flex-col gap-1 w-[260px] max-w-[260px]">
+              <label class="text-[12px] text-[#8c8c8c]">Project Title</label>
+              <input type="text" id="searchProjectTitle" placeholder="Enter Project Title" class="input-field w-full h-[34px]">
+            </div>
+            <div class="flex flex-col gap-1 w-[260px] max-w-[260px]">
+              <label class="text-[12px] text-[#8c8c8c]">Sales Name</label>
+              <input type="text" id="searchSalesName" placeholder="Enter Sales Name" class="input-field w-full h-[34px]">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] text-[#8c8c8c]">Project starting time</label>
+              <div class="flex items-center gap-2">
+                <input type="text" id="searchStartDate" placeholder="YYYY-MM-DD" class="input-field w-[180px] max-w-[180px] h-[34px]">
+                <span class="text-[#8c8c8c] text-[13px]">~</span>
+                <input type="text" id="searchEndDate" placeholder="YYYY-MM-DD" class="input-field w-[180px] max-w-[180px] h-[34px]">
+              </div>
+            </div>
+            <div class="flex gap-2 mt-4 sm:mt-0">
+              <button onclick="handleSearch()" class="btn-primary h-[34px] px-5 rounded text-[14px] flex items-center gap-1 font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                Search
+              </button>
+              <button onclick="handleReset()" class="btn-default h-[34px] px-5 rounded text-[14px] flex items-center gap-1 font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-[13px] border-collapse min-w-[1100px]">
+            <thead>
+              <tr class="table-header border-b border-[#f0f0f0] text-[14px]">
+                <th class="px-2 py-2 text-left whitespace-nowrap">Sub-project ID - US</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Project Title</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Product Name</th>
+                <th class="px-2 py-2 text-left" style="min-width:70px;">Actual sample count</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Sales name</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Workflow step</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Workflow step - China</th>
+                <th class="px-2 py-2 text-left" style="min-width:75px;">Project starting time</th>
+                <th class="px-2 py-2 text-left" style="min-width:75px;">Production ending time</th>
+                <th class="px-2 py-2 text-left" style="min-width:70px;">Bioinfo ending time</th>
+                <th class="px-2 py-2 text-left" style="min-width:70px;">Contract ending time</th>
+                <th class="px-2 py-2 text-left" style="min-width:70px;">Urgent delivery time</th>
+                <th class="px-2 py-2 text-left whitespace-nowrap">Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+          </table>
+        </div>
+        <!-- Empty state -->
+        <div id="emptyState" class="hidden py-16 text-center">
+          <svg class="w-12 h-12 mx-auto text-[#d9d9d9] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+          <p class="text-[14px] text-[#8c8c8c]">No data found</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-end items-center gap-3 p-4 border-t border-[#f0f0f0]">
+          <span class="text-[14px] text-[#595959]"><span id="totalCount">0</span> in total</span>
+          <div class="flex items-center gap-2">
+            <button onclick="prevPage()" id="btnPrev" class="pagination-btn" disabled>&lt;</button>
+            <div id="pageNumbers" class="flex gap-1"></div>
+            <button onclick="nextPage()" id="btnNext" class="pagination-btn">&gt;</button>
+            <select id="pageSize" onchange="changePageSize()" class="input-field h-[32px] text-[14px] ml-2">
+              <option value="10">10 /page</option>
+              <option value="20">20 /page</option>
+              <option value="50">50 /page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const rawData = [
+      { subProjectIdUS: "MW20231101-US", projectTitle: "Liver Cancer Metabolomics", productName: "LC-MS Metabolomics", actualSampleCount: 120, salesName: "Alice Chen", testingSubProjectIdChina: "MW20231101-CN", workflowStep: "Bioinformatics analysis", workflowStepChina: "Bioinformatics analysis", projectStartingTime: "2023-11-02", productionEndingTime: "2023-11-15", bioinfoEndingTime: "2023-11-20", contractEndingTime: "2023-11-25", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231105-US", projectTitle: "Colorectal Cancer Proteomics", productName: "TMT Proteomics", actualSampleCount: 85, salesName: "Bob Wang", testingSubProjectIdChina: "MW20231105-CN", workflowStep: "Protein digestion", workflowStepChina: "Protein digestion", projectStartingTime: "2023-11-05", productionEndingTime: "2023-11-18", bioinfoEndingTime: "2023-11-22", contractEndingTime: "2023-11-28", urgentDeliveryTime: "2023-11-20", remarks: "Urgent" },
+      { subProjectIdUS: "MW20231110-US", projectTitle: "Gut Microbiome Multi-omics", productName: "16S + Metabolomics", actualSampleCount: 200, salesName: "Carol Liu", testingSubProjectIdChina: "MW20231110-CN", workflowStep: "Sample aliquoting", workflowStepChina: "Sample aliquoting", projectStartingTime: "2023-11-10", productionEndingTime: "2023-11-25", bioinfoEndingTime: "2023-11-30", contractEndingTime: "2023-12-05", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231112-US", projectTitle: "Alzheimer's Lipidomics", productName: "Lipidomics", actualSampleCount: 60, salesName: "David Zhang", testingSubProjectIdChina: "MW20231112-CN", workflowStep: "RNA extraction", workflowStepChina: "RNA extraction", projectStartingTime: "2023-11-12", productionEndingTime: "2023-11-20", bioinfoEndingTime: "2023-11-24", contractEndingTime: "2023-11-30", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231115-US", projectTitle: "Breast Cancer Genomics", productName: "Whole Genome Sequencing", actualSampleCount: 150, salesName: "Eva Li", testingSubProjectIdChina: "MW20231115-CN", workflowStep: "NGS library confirmation", workflowStepChina: "NGS library confirmation", projectStartingTime: "2023-11-15", productionEndingTime: "2023-11-28", bioinfoEndingTime: "2023-12-02", contractEndingTime: "2023-12-08", urgentDeliveryTime: "2023-11-30", remarks: "High priority" },
+      { subProjectIdUS: "MW20231118-US", projectTitle: "Diabetes Type 2 Metabolomics", productName: "Untargeted Metabolomics", actualSampleCount: 95, salesName: "Frank Zhao", testingSubProjectIdChina: "MW20231118-CN", workflowStep: "LC-MS analysis", workflowStepChina: "LC-MS analysis", projectStartingTime: "2023-11-18", productionEndingTime: "2023-11-30", bioinfoEndingTime: "2023-12-05", contractEndingTime: "2023-12-10", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231120-US", projectTitle: "Parkinson's Proteomics", productName: "DIA Proteomics", actualSampleCount: 72, salesName: "Grace Wu", testingSubProjectIdChina: "MW20231120-CN", workflowStep: "Protein extraction", workflowStepChina: "Protein extraction", projectStartingTime: "2023-11-20", productionEndingTime: "2023-12-01", bioinfoEndingTime: "2023-12-06", contractEndingTime: "2023-12-12", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231122-US", projectTitle: "Obesity Gut Microbiome", productName: "Metagenomics", actualSampleCount: 180, salesName: "Henry Yang", testingSubProjectIdChina: "MW20231122-CN", workflowStep: "Grinding", workflowStepChina: "Grinding", projectStartingTime: "2023-11-22", productionEndingTime: "2023-12-05", bioinfoEndingTime: "2023-12-10", contractEndingTime: "2023-12-15", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231125-US", projectTitle: "Lung Cancer Immunotherapy", productName: "TCR Sequencing", actualSampleCount: 110, salesName: "Ivy Xu", testingSubProjectIdChina: "MW20231125-CN", workflowStep: "RNA library preparation", workflowStepChina: "RNA library preparation", projectStartingTime: "2023-11-25", productionEndingTime: "2023-12-08", bioinfoEndingTime: "2023-12-12", contractEndingTime: "2023-12-18", urgentDeliveryTime: "2023-12-05", remarks: "Urgent" },
+      { subProjectIdUS: "MW20231128-US", projectTitle: "Kidney Disease Multi-omics", productName: "Proteomics + Metabolomics", actualSampleCount: 140, salesName: "Jack Ma", testingSubProjectIdChina: "MW20231128-CN", workflowStep: "Multi-omics bioinformatics analysis", workflowStepChina: "Multi-omics bioinformatics analysis", projectStartingTime: "2023-11-28", productionEndingTime: "2023-12-10", bioinfoEndingTime: "2023-12-15", contractEndingTime: "2023-12-20", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231201-US", projectTitle: "Heart Failure Lipidomics", productName: "Lipidomics + Targeted", actualSampleCount: 88, salesName: "Kelly Sun", testingSubProjectIdChina: "MW20231201-CN", workflowStep: "Bioinformatics QC", workflowStepChina: "Bioinformatics QC", projectStartingTime: "2023-12-01", productionEndingTime: "2023-12-12", bioinfoEndingTime: "2023-12-16", contractEndingTime: "2023-12-22", urgentDeliveryTime: "-", remarks: "Normal" },
+      { subProjectIdUS: "MW20231205-US", projectTitle: "Rheumatoid Arthritis Genomics", productName: "Exome Sequencing", actualSampleCount: 130, salesName: "Leo Tian", testingSubProjectIdChina: "MW20231205-CN", workflowStep: "Sequencing group run", workflowStepChina: "Sequencing group run", projectStartingTime: "2023-12-05", productionEndingTime: "2023-12-18", bioinfoEndingTime: "2023-12-22", contractEndingTime: "2023-12-28", urgentDeliveryTime: "-", remarks: "Normal" },
+    ];
+
+    let filteredData = [...rawData];
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const emptyState = document.getElementById('emptyState');
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = filteredData.slice(start, end);
+
+      if (pageData.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        tbody.innerHTML = pageData.map(row => `
+          <tr class="table-row border-b border-[#f0f0f0] text-[13px] text-[#262626]">
+            <td class="px-2 py-2 whitespace-nowrap">${row.subProjectIdUS}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.projectTitle}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.productName}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.actualSampleCount}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.salesName}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.workflowStep}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.workflowStepChina}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.projectStartingTime}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.productionEndingTime}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.bioinfoEndingTime}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.contractEndingTime}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.urgentDeliveryTime}</td>
+            <td class="px-2 py-2 whitespace-nowrap">${row.remarks}</td>
+          </tr>
+        `).join('');
+      }
+
+      document.getElementById('totalCount').textContent = filteredData.length;
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+      const pageNumbers = document.getElementById('pageNumbers');
+      document.getElementById('btnPrev').disabled = currentPage === 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages || filteredData.length === 0;
+
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button onclick="goToPage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>`;
+      }
+      pageNumbers.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredData.length / pageSize);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderTable();
+    }
+
+    function prevPage() { goToPage(currentPage - 1); }
+    function nextPage() { goToPage(currentPage + 1); }
+
+    function changePageSize() {
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      currentPage = 1;
+      renderTable();
+    }
+
+    function handleSearch() {
+      const subProjectId = document.getElementById('searchSubProjectId').value.toLowerCase().trim();
+      const projectTitle = document.getElementById('searchProjectTitle').value.toLowerCase().trim();
+      const salesName = document.getElementById('searchSalesName').value.toLowerCase().trim();
+      const startDate = document.getElementById('searchStartDate').value;
+      const endDate = document.getElementById('searchEndDate').value;
+
+      filteredData = rawData.filter(row => {
+        const matchSubProjectId = !subProjectId || row.subProjectIdUS.toLowerCase().includes(subProjectId);
+        const matchProjectTitle = !projectTitle || row.projectTitle.toLowerCase().includes(projectTitle);
+        const matchSalesName = !salesName || row.salesName.toLowerCase().includes(salesName);
+        let matchDate = true;
+        if (startDate && endDate) {
+          matchDate = row.projectStartingTime >= startDate && row.projectStartingTime <= endDate;
+        } else if (startDate) {
+          matchDate = row.projectStartingTime >= startDate;
+        } else if (endDate) {
+          matchDate = row.projectStartingTime <= endDate;
+        }
+        return matchSubProjectId && matchProjectTitle && matchSalesName && matchDate;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function handleReset() {
+      document.getElementById('searchSubProjectId').value = '';
+      document.getElementById('searchProjectTitle').value = '';
+      document.getElementById('searchSalesName').value = '';
+      document.getElementById('searchStartDate').value = '';
+      document.getElementById('searchEndDate').value = '';
+      filteredData = [...rawData];
+      currentPage = 1;
+      renderTable();
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('mobileSidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+
+    function toggleMobileNav() {
+      document.getElementById('mobileNavLinks').classList.toggle('mobile-open');
+    }
+
+    // Close mobile menus on resize to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 769) {
+        document.getElementById('mobileSidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+      }
+      if (window.innerWidth >= 1024) {
+        document.getElementById('mobileNavLinks').classList.remove('mobile-open');
+      }
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
